@@ -1,0 +1,233 @@
+flowit:
+  version: 0.1
+  config:
+  - abort-on-failed-action: true
+  - strict: true
+  - shell: /usr/bin/env bash
+  variables:
+  - circleci-username: ${CIRCLECI_USERNAME}
+  - circleci-project-name: ${CIRCLECI_PROJECT_NAME}
+  - circleci-token: ${CIRCLECI_TOKEN}
+  workflow:
+    branches:
+    - id: master
+      name: master
+      eternal: true
+      protected: true
+
+    - id: develop
+      name: develop
+      eternal: true
+      protected: true
+
+    - id: feature
+      name: $<prefix>$<suffix>
+      prefix: feature/$<jira-issue-id>/
+      suffix: $<feature-branch-suffix>
+      eternal: false
+      protected: false
+      transitions:
+      - from: develop
+        to: develop
+        local: false
+
+    - id: bugfix 
+      name: $<prefix>$<suffix>
+      prefix: bugfix/$<jira-issue-id>/
+      suffix: $<bugfix-branch-suffix>
+      eternal: false
+      protected: false
+      transitions:
+      - from: develop
+        to: develop
+        local: false
+      - from: release
+        to: release
+        local: false
+
+    - id: hotfix
+      name: $<prefix>$<suffix>
+      prefix: hotfix/$<jira-issue-id>/
+      suffix: $<hotfix-branch-suffix>
+      eternal: false
+      protected: false
+      transitions:
+      - from: master
+        to: 
+        - develop
+          local: true
+        - master
+          local: false
+  
+    - id: release
+      name: $<prefix>$<suffix>
+      prefix: release/$<jira-issue-id>/
+      suffix: $<release-branch-suffix>
+      eternal: false
+      protected: true
+      transitions:
+      - from: develop
+        to:
+        - develop
+          local: false
+        - master
+          local: true
+
+    # TODO: There's no pre-tag hook so we need to think of an alternative. Aliasing / overriding git tag?
+    tags:
+    - id: release
+      format: v[0-9]+\.[0-9]+\.[0-9]+
+      stages:
+      - release:
+        - finish
+      - hotfix:
+        - finish
+      branches: 
+      - master
+
+    - id: dev
+      format: dev
+      branches:
+      - develop
+
+    - id: stage
+      format: stage
+      branches:
+      - release
+
+    stages:
+    - < current-branch-type | feature,bugfix >:
+      - start: "< feature-branch-suffix:bugfix-branch-suffix | Branch name without prefix >
+                < jira-issue-id | Related Jira Issue ID > 
+                [ base-branch-name=develop | Base branch name | develop,release ]"
+        conditions:
+        - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+        actions:
+        - git checkout $<base-branch-name>
+        - git pull origin $<base-branch-name>
+        - git checkout -b $<workflow.branches[$<current-branch-type>].name> $<base-branch-name>
+        - jira transition $<jira-issue-id> 'In progress'
+
+      - fetch: "<full-branch-name | Remote full branch name>"
+        actions:
+        - git fetch 
+        - git checkout $<full-branch-name>
+        - git pull origin $<full-branch-name>
+
+      - sync:
+        actions:
+        - git checkout $<base-branch-name>
+        - git pull origin $<base-branch-name>
+        - git checkout $<workflow.branches[$<current-branch-type>].name>
+        - git rebase $<base-branch-name>
+
+      - publish:
+        conditions:
+        - ./run-tests.sh
+        - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
+        actions:
+        - git checkout $<workflow.branches[$<current-branch-type>].name>
+        - git push origin $<workflow.branches[$<current-branch-type>].name>
+        - jira transition $<jira-issue-id> 'In code review'
+
+      - finish:
+        conditions:
+        - "[[ $(curl https://circleci.com/api/v1.1/project/github/$<circleci-username>/$<circleci-project-name>?circle-token=$<circleci-token>) == *'Passed'* ]]"
+        - "[[ $(hub pr list --base $<workflow.branches[$<current-branch-type>].name>) == *'Merged'* ]]"
+        actions:
+        - jira transition $<jira-issue-id> 'Done'
+        - git checkout $<base-branch-name>
+        - git pull origin $<base-branch-name>
+        - git branch -D $<workflow.branches[$<current-branch-type>].name>
+        - git push --delete origin $<workflow.branches[$<current-branch-type>].name>
+  
+    - release:
+      - start: < release-branch-suffix | Branch name without prefix >
+               < jira-issue-id | Related Jira Issue ID >
+               < release-tag-version | Release tag version >
+        conditions:
+        - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+        actions:
+        - git checkout develop
+        - git pull origin develop
+        - git checkout -b $<workflow.branches[release].name> develop
+        - jira transition $<jira-issue-id> 'In progress'
+
+      - sync:
+        actions:
+        - git checkout develop
+        - git pull origin develop
+        - git checkout $<workflow.branches[release].name>
+        - git rebase develop
+
+      - publish:
+        conditions:
+        - ./run-tests.sh
+        - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
+        actions:
+        - git checkout $<workflow.branches[release].name>
+        - git push origin $<workflow.branches[release].name>
+        - jira transition $<jira-issue-id> 'In code review'
+
+      - finish:
+        conditions:
+        - "[[ $(curl https://circleci.com/api/v1.1/project/github/$<circleci-username>/$<circleci-project-name>?circle-token=$<circleci-token>) == *'Passed'* ]]"
+        - "[[ $(hub pr list --base develop --head $<workflow.branches[release].name>) == *'Merged'* ]]"
+        actions:
+        - git checkout master
+        - git pull origin master
+        - git merge --no-ff $<workflow.branches[release].name>
+        - git tag $<release-tag-version>
+        - git push --no-verify origin master
+        - git push --no-verify origin $<release-tag-version>
+        - jira transition $<jira-issue-id> 'Done'
+        - git checkout develop
+        - git pull origin develop
+        - git branch -D $<workflow.branches[release].name>
+        - git push --delete origin $<workflow.branches[release].name>
+    
+    - hotfix:
+      - start: < hotfix-branch-suffix | Branch name without prefix >
+               < jira-issue-id | Related Jira Issue ID >
+               < hotfix-tag-version | Hotfix tag version >
+        conditions:
+        - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+        actions:
+        - git checkout master
+        - git pull origin master
+        - git checkout -b $<workflow.branches[hotfix].name> master
+        - jira transition $<jira-issue-id> 'In progress'
+
+      - sync:
+        actions:
+        - git checkout master
+        - git pull origin master
+        - git checkout $<workflow.branches[hotfix].name>
+        - git rebase master
+
+      - publish:
+        conditions:
+        - ./run-tests.sh
+        - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
+        actions:
+        - git checkout $<workflow.branches[hotfix].name>
+        - git push origin $<workflow.branches[hotfix].name>
+        - jira transition $<jira-issue-id> 'In code review'
+
+      - finish:
+        conditions:
+        - "[[ $(curl https://circleci.com/api/v1.1/project/github/$<circleci-username>/$<circleci-project-name>?circle-token=$<circleci-token>) == *'Passed'* ]]"
+        - "[[ $(hub pr list --base master --head $<workflow.branches[hotfix].name>) == *'Merged'* ]]"
+        actions:
+        - git checkout develop
+        - git pull origin develop
+        - git merge --no-ff $<workflow.branches[hotfix].name>
+        - git tag $<hotfix-tag-version>
+        - git push --no-verify origin develop
+        - git push --no-verify origin $<hotfix-tag-version>
+        - jira transition $<jira-issue-id> 'Done'
+        - git checkout master
+        - git pull origin master
+        - git branch -D $<workflow.branches[hotfix].name>
+        - git push --delete origin $<workflow.branches[hotfix].name>
+  
