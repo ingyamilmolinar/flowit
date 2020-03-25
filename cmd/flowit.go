@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/yamil-rivera/flowit/internal/commands"
 	"github.com/yamil-rivera/flowit/internal/configs"
-	logging "github.com/yamil-rivera/flowit/internal/utils"
+	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
 func main() {
-	logging.InitLogger()
-	configs.ReadConfig("git-flow")
+	utils.InitLogger()
+	config := configs.ReadConfig("git-flow", utils.GetRootDirectory()+"/samples/")
+	configs.ValidateConfig(config)
 	commands.RegisterCommands("flowit")
 }
