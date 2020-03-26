@@ -1,13 +1,13 @@
 flowit:
-  version: 0.1
+  version: "0.1"
   config:
-  - abort-on-failed-action: true
-  - strict: true
-  - shell: /usr/bin/env bash
+    abort-on-failed-action: true
+    strict: true
+    shell: /usr/bin/env bash
   variables:
-  - circleci-username: ${CIRCLECI_USERNAME}
-  - circleci-project-name: ${CIRCLECI_PROJECT_NAME}
-  - circleci-token: ${CIRCLECI_TOKEN}
+    circleci-username: ${CIRCLECI_USERNAME}
+    circleci-project-name: ${CIRCLECI_PROJECT_NAME}
+    circleci-token: ${CIRCLECI_TOKEN}
   workflow:
     branches:
     - id: master
@@ -28,8 +28,7 @@ flowit:
       protected: false
       transitions:
       - from: develop
-        to: develop
-        local: false
+        to: [ develop:remote ]
 
     - id: bugfix 
       name: $<prefix>$<suffix>
@@ -39,11 +38,9 @@ flowit:
       protected: false
       transitions:
       - from: develop
-        to: develop
-        local: false
+        to: [ develop:local ]
       - from: release
-        to: release
-        local: false
+        to: [ release:remote ]
 
     - id: hotfix
       name: $<prefix>$<suffix>
@@ -53,11 +50,7 @@ flowit:
       protected: false
       transitions:
       - from: master
-        to: 
-        - id: develop
-          local: true
-        - id: master
-          local: false
+        to: [ develop:local, master:remote ]
   
     - id: release
       name: $<prefix>$<suffix>
@@ -67,11 +60,7 @@ flowit:
       protected: true
       transitions:
       - from: develop
-        to:
-        - id: develop
-          local: false
-        - id: master
-          local: true
+        to: [ develop:remote, master:local ]
 
     # TODO: There's no pre-tag hook so we need to think of an alternative. Aliasing / overriding git tag?
     tags:

@@ -1,20 +1,28 @@
 package configs
 
 import (
-	"github.com/spf13/viper"
-	"github.com/yamil-rivera/flowit/internal/utils"
+	"fmt"
+
+	valid "github.com/asaskevich/govalidator"
 )
 
-var logger = utils.GetLogger()
+// ValidateViperConfig takes a viper configuration and validates it section by section
+func validateViperConfig(viperConfig *Viper) error {
 
-// ValidateConfig takes a viper configuration and validates it section by section
-func ValidateConfig(viperConfig *viper.Viper) {
-	version := viperConfig.GetString("flowit.version")
-	config := viperConfig.Get("flowit.config").([]interface{})
-	variables := viperConfig.Get("flowit.variables").([]interface{})
-	workflow := viperConfig.Get("flowit.workflow").(map[string]interface{})
-	logger.Info(version)
-	logger.Info(config[0].(map[interface{}]interface{})["abort-on-failed-action"])
-	logger.Info(variables[0].(map[interface{}]interface{})["circleci-username"])
-	logger.Info(workflow["branches"].([]interface{})[0].(map[interface{}]interface{}))
+	flowit, err := unmarshallConfig(viperConfig)
+	if err != nil {
+		return fmt.Errorf("Validation error: %w", err)
+	}
+
+	valid.SetFieldsRequiredByDefault(true)
+	valid.SetNilPtrAllowedByRequired(false)
+
+	registerCustomValidators()
+
+	// TODO: The error message when we return false is mostly unreadable. Can we change it?
+	_, err = valid.ValidateStruct(flowit)
+	if err != nil {
+		return fmt.Errorf("Validation error: %w", err)
+	}
+	return nil
 }

@@ -1,12 +1,12 @@
 flowit:
-  version: 0.1
+  version: "0.1"
   config:
-  - abort-on-failed-action: true
-  - strict: false
-  - shell: /usr/bin/env bash
+    abort-on-failed-action: true
+    strict: false
+    shell: /usr/bin/env bash
   variables:
-  - gerrit-host: gerrit.review.com
-  - gerrit-port: 29418
+    gerrit-host: gerrit.review.com
+    gerrit-port: 29418
   workflow:
     branches:
     - id: master

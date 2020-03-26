@@ -6,9 +6,19 @@ import (
 	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
+const mainCommand = "flowit"
+const configFile = "git-flow"
+
 func main() {
-	utils.InitLogger()
-	config := configs.ReadConfig("git-flow", utils.GetRootDirectory()+"/samples/")
-	configs.ValidateConfig(config)
-	commands.RegisterCommands("flowit")
+	_, err := configs.ParseConfig(configFile, utils.GetRootDirectory()+"/samples/")
+	exitIfErr(err)
+	commands.RegisterCommands(mainCommand)
+}
+
+func exitIfErr(err error) {
+	if err != nil {
+		logger := utils.GetLogger()
+		logger.Error(err)
+		panic(err)
+	}
 }

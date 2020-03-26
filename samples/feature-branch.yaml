@@ -1,13 +1,13 @@
 flowit:
-  version: 0.1
+  version: "0.1"
   config:
-  - abort-on-failed-action: true # On this case, we need to track every action so we can resume an interrupted stage
-  - strict: false # Strict mode will prevent creating other types of workflow elements. This will make git unusable for mutation of refs
-  - shell: /usr/bin/env bash
+    abort-on-failed-action: true # On this case, we need to track every action so we can resume an interrupted stage
+    strict: false # Strict mode will prevent creating other types of workflow elements. This will make git unusable for mutation of refs
+    shell: /usr/bin/env bash
   variables:
-  - circleci-username: ${CIRCLECI_USERNAME}
-  - circleci-project-name: ${CIRCLECI_PROJECT_NAME}
-  - circleci-token: ${CIRCLECI_TOKEN}
+    circleci-username: ${CIRCLECI_USERNAME}
+    circleci-project-name: ${CIRCLECI_PROJECT_NAME}
+    circleci-token: ${CIRCLECI_TOKEN}
   workflow:
     branches:
     - id: master
@@ -34,7 +34,7 @@ flowit:
     # And they should have a valid format
     tags:
     - id: release
-      format: "[0-9]+\.[0-9]+"
+      format: "[0-9]+\\.[0-9]+"
       branches: 
       - master
 
