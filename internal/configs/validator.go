@@ -2,8 +2,11 @@ package configs
 
 import (
 	"fmt"
+	"reflect"
+	"runtime"
 
 	valid "github.com/asaskevich/govalidator"
+	"github.com/pkg/errors"
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
@@ -12,7 +15,7 @@ func validateViperConfig(flowit Flowit) error {
 	valid.SetFieldsRequiredByDefault(true)
 	valid.SetNilPtrAllowedByRequired(false)
 
-	registerCustomValidators(map[string]interface{}{
+	err := registerCustomValidators(map[string]interface{}{
 		"flowitversion":           versionValidator,
 		"flowitconfigshell":       shellValidator,
 		"flowitbranches":          branchesValidator,
@@ -22,11 +25,14 @@ func validateViperConfig(flowit Flowit) error {
 		"flowitbranchsuffix":      branchSuffixValidator,
 		"flowitbranchtransitions": transitionsValidator,
 	})
+	if err != nil {
+		return errors.Wrap(err, "Error registering validators")
+	}
 
 	// TODO: The error message when we return false is mostly unreadable. Can we change it?
-	_, err := valid.ValidateStruct(flowit)
+	_, err = valid.ValidateStruct(flowit)
 	if err != nil {
-		return fmt.Errorf("Validation error: %w", err)
+		return errors.Wrap(err, "Validation error")
 	}
 	return nil
 }
@@ -39,7 +45,7 @@ func registerCustomValidators(validators map[string]interface{}) error {
 		case func(interface{}, interface{}) bool:
 			valid.CustomTypeTagMap.Set(k, valid.CustomTypeValidator(v.(func(interface{}, interface{}) bool)))
 		default:
-			return fmt.Errorf("Function %s is not a valid validator", v)
+			return errors.New(fmt.Sprintf("Function %s is not a valid validator", runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()))
 		}
 	}
 	return nil

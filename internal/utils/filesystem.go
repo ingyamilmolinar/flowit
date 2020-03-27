@@ -11,6 +11,7 @@ var (
 )
 
 // GetRootDirectory gets the project root directory
+// TODO: This assumes a two level deep directory which is very error prone
 func GetRootDirectory() string {
 	return basepath + "/../../"
 }

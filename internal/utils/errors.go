@@ -1,10 +1,14 @@
 package utils
 
+import (
+	"fmt"
+	"os"
+)
+
 // ExitIfErr logs and panics if an error exists
 func ExitIfErr(err error) {
 	if err != nil {
-		logger := GetLogger()
-		logger.Error(err)
-		panic(err)
+		GetLogger().Error(fmt.Sprintf("%+v", err))
+		os.Exit(1)
 	}
 }

@@ -1,8 +1,7 @@
 package configs
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -29,18 +28,18 @@ func ProcessFlowitConfig(configName string, configLocation string) (*Viper, erro
 	viper.AddConfigPath(configLocation)
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading config file: %w", err)
+		return nil, errors.Wrap(err, "Config reading error")
 	}
 	viper := Viper{viper.GetViper()}
 
 	flowit, err := unmarshallConfig(&viper)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Config unmarshalling error")
 	}
 
 	err = validateViperConfig(flowit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Config validation error")
 	}
 	return &viper, nil
 }

@@ -12,5 +12,6 @@ const configFile = "git-flow"
 func main() {
 	_, err := configs.ProcessFlowitConfig(configFile, utils.GetRootDirectory()+"/samples/")
 	utils.ExitIfErr(err)
-	commands.RegisterCommands(mainCommand)
+	err = commands.RegisterCommands(mainCommand)
+	utils.ExitIfErr(err)
 }

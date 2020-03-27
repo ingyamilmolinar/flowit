@@ -1,9 +1,8 @@
 package configs
 
 import (
-	"fmt"
-
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -19,7 +18,7 @@ func unmarshallConfig(viperConfig *Viper) (Flowit, error) {
 
 	err := viper.UnmarshalKey("flowit", &flowit, config)
 	if err != nil {
-		return flowit, fmt.Errorf("Unmarshalling error: %w", err)
+		return flowit, errors.Wrap(err, "Validation error")
 	}
 	return flowit, nil
 }

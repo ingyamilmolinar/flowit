@@ -30,6 +30,7 @@ flowit:
       - from: develop
         to: [ develop:remote ]
 
+    # Removing this line does not make the validation fail
     - id: bugfix 
       name: $<prefix>$<suffix>
       prefix: bugfix/$<jira-issue-id>/
