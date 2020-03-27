@@ -1,40 +1,41 @@
 package configs
 
+// Flowit is the typed data structure for populating the input configuration
 type Flowit struct {
 	Version   *string    `valid:"flowitversion~Unsupported flowit version,required"`
-	Config    *Config    `valid:"optional"`
-	Variables *Variables `valid:"-"`
-	Workflow  *Workflow  `valid:"required"`
+	Config    *config    `valid:"optional"`
+	Variables *variables `valid:"-"`
+	Workflow  *workflow  `valid:"required"`
 }
 
-type Config struct {
+type config struct {
 	AbortOnFailedAction *bool   `valid:"optional" mapstructure:"abort-on-failed-action"`
 	Strict              *bool   `valid:"optional"`
-	Shell               *string `valid:"optional"`
+	Shell               *string `valid:"flowitconfigshell~Invalid config shell,optional"`
 }
-type Variables map[string]interface{}
+type variables map[string]interface{}
 
-type Workflow struct {
-	Branches []*Branch `valid:"-"` //`valid:"flowitbranches,required"`
-	Tags     []*Tag    `valid:"-"` //`valid:"optional"`
-	Stages   []*Stage  `valid:"-"` //`valid:"required"`
+type workflow struct {
+	Branches []*branch `valid:"flowitbranches~Invalid branches,required"`
+	Tags     []*tag    `valid:"-"` //`valid:"optional"`
+	Stages   []*stage  `valid:"-"` //`valid:"required"`
 }
 
-type Tag map[string]interface{}
-
-type Stage map[string]interface{}
-
-type Branch struct {
-	Id          *string       `valid:"required"`
-	Name        *string       `valid:"required"`
-	Prefix      *string       `valid:"optional"`
-	Suffix      *string       `valid:"optional"`
+type branch struct {
+	ID          *string       `valid:"flowitbranchid~Invalid branch ID,required"`
+	Name        *string       `valid:"flowitbranchname~Invalid branch name,required"`
+	Prefix      *string       `valid:"flowitbranchpreffix~Invalid branch preffix,optional"`
+	Suffix      *string       `valid:"flowitbranchsuffix~Invalid branch suffix,optional"`
 	Eternal     *bool         `valid:"required"`
 	Protected   *bool         `valid:"required"`
-	Transitions []*Transition `valid:"optional"`
+	Transitions []*transition `valid:"flowitbranchtransitions~Invalid branch transitions,optional"`
 }
 
-type Transition struct {
+type tag map[string]interface{}
+
+type stage map[string]interface{}
+
+type transition struct {
 	From *string   `valid:"required"`
 	To   []*string `valid:"required"`
 }

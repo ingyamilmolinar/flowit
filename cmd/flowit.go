@@ -10,15 +10,7 @@ const mainCommand = "flowit"
 const configFile = "git-flow"
 
 func main() {
-	_, err := configs.ParseConfig(configFile, utils.GetRootDirectory()+"/samples/")
-	exitIfErr(err)
+	_, err := configs.ProcessFlowitConfig(configFile, utils.GetRootDirectory()+"/samples/")
+	utils.ExitIfErr(err)
 	commands.RegisterCommands(mainCommand)
-}
-
-func exitIfErr(err error) {
-	if err != nil {
-		logger := utils.GetLogger()
-		logger.Error(err)
-		panic(err)
-	}
 }

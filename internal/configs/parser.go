@@ -19,8 +19,8 @@ func (v *Viper) GetSlice(key string) []interface{} {
 	return v.Get(key).([]interface{})
 }
 
-// ReadConfig reads, parses the specified yaml configuration file and returns a map with the key/values
-func ParseConfig(configName string, configLocation string) (*Viper, error) {
+// ProcessFlowitConfig reads, parses the specified yaml configuration file and returns a map with the key/values
+func ProcessFlowitConfig(configName string, configLocation string) (*Viper, error) {
 
 	// TODO: Hash parsed and validated config and verify if it changed or not
 
@@ -29,10 +29,16 @@ func ParseConfig(configName string, configLocation string) (*Viper, error) {
 	viper.AddConfigPath(configLocation)
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Fatal error reading config file: %w", err)
+		return nil, fmt.Errorf("Error reading config file: %w", err)
 	}
 	viper := Viper{viper.GetViper()}
-	err = validateViperConfig(&viper)
+
+	flowit, err := unmarshallConfig(&viper)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateViperConfig(flowit)
 	if err != nil {
 		return nil, err
 	}
