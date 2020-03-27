@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ValidateViperConfig takes a viper configuration and validates it section by section
-func validateViperConfig(flowit Flowit) error {
+// ValidateConfig takes a viper configuration and validates it section by section
+func validateConfig(flowit Flowit) error {
 
 	valid.SetFieldsRequiredByDefault(true)
 	valid.SetNilPtrAllowedByRequired(false)

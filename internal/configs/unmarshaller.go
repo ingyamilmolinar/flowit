@@ -7,7 +7,7 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig(viperConfig *Viper) (Flowit, error) {
+func unmarshallConfig() (Flowit, error) {
 
 	var flowit Flowit
 
