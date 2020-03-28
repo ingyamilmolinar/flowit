@@ -10,7 +10,7 @@ var logger *logrus.Logger
 var loggerInitialized = false
 
 // InitLogger initializes a new instance of logrus.Logger for later consumption
-func InitLogger() {
+func initLogger() {
 	logger = logrus.New()
 	logger.SetFormatter(new(logrus.TextFormatter))
 	logger.Formatter.(*logrus.TextFormatter).FullTimestamp = true
@@ -23,7 +23,7 @@ func InitLogger() {
 // GetLogger retrieves the initialized instance (calls InitLogger if not already initialized)
 func GetLogger() *logrus.Logger {
 	if !loggerInitialized {
-		InitLogger()
+		initLogger()
 	}
 	return logger
 }

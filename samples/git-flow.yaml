@@ -30,7 +30,7 @@ flowit:
       - from: develop
         to: [ develop:remote ]
 
-    # Removing this line does not make the validation fail
+    # TODO: Removing this line does not make the validation fail
     - id: bugfix 
       name: $<prefix>$<suffix>
       prefix: bugfix/$<jira-issue-id>/
@@ -85,6 +85,8 @@ flowit:
       branches:
       - release
 
+    # TODO: What if a stage does not have anything to do with a branch type?
+    # Ex: "release" stage will not create a branch, it will just tag master and push
     stages:
     - < current-branch-type | feature,bugfix >:
       - start: "< feature-branch-suffix:bugfix-branch-suffix | Branch name without prefix >

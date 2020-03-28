@@ -1,0 +1,28 @@
+{
+	"go.lintTool":"golangci-lint",
+	"go.lintFlags": [
+		"--fast",
+		"-E depguard",
+		"-E dogsled",
+		"-E dupl",
+		"-E funlen",
+		"-E gochecknoglobals",
+		"-E goconst",
+		"-E gocritic",
+		"-E gofmt",
+		"-E goimports",
+		"-E gomnd",
+		"-E gosec",
+		"-E interfacer",
+		"-E lll",
+		"-E maligned",
+		"-E misspell",
+		"-E prealloc",
+		"-E rowserrcheck",
+		"-E scopelint",
+		"-E stylecheck",
+		"-E unconvert",
+		"-E unparam"
+	],
+	"go.lintOnSave": "file"
+}

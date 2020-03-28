@@ -20,7 +20,7 @@ func ProcessFlowitConfig(configName string, configLocation string) (*Flowit, err
 
 	err = validateConfig(flowit)
 	if err != nil {
-		return &flowit, errors.Wrap(err, "Config validation error")
+		return flowit, errors.Wrap(err, "Config validation error")
 	}
-	return &flowit, nil
+	return flowit, nil
 }
