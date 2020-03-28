@@ -7,13 +7,14 @@ import (
 
 const configType = "yaml"
 
-func readConfig(configName string, configLocation string) error {
+func readConfig(configName string, configLocation string) (*viper.Viper, error) {
+	viper := viper.New()
 	viper.SetConfigType(configType)
 	viper.SetConfigName(configName)
 	viper.AddConfigPath(configLocation)
 	err := viper.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "Config reading error")
+		return nil, errors.Wrap(err, "Config reading error")
 	}
-	return nil
+	return viper, nil
 }

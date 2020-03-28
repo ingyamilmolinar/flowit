@@ -9,22 +9,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+var customValidators = map[string]interface{}{
+	"flowitversion":           versionValidator,
+	"flowitconfigshell":       shellValidator,
+	"flowitbranches":          branchesValidator,
+	"flowitbranchid":          branchIDValidator,
+	"flowitbranchname":        branchNameValidator,
+	"flowitbranchpreffix":     branchPreffixValidator,
+	"flowitbranchsuffix":      branchSuffixValidator,
+	"flowitbranchtransitions": transitionsValidator,
+}
+
 // ValidateConfig takes a viper configuration and validates it section by section
 func validateConfig(flowit Flowit) error {
 
 	valid.SetFieldsRequiredByDefault(true)
 	valid.SetNilPtrAllowedByRequired(false)
 
-	err := registerCustomValidators(map[string]interface{}{
-		"flowitversion":           versionValidator,
-		"flowitconfigshell":       shellValidator,
-		"flowitbranches":          branchesValidator,
-		"flowitbranchid":          branchIDValidator,
-		"flowitbranchname":        branchNameValidator,
-		"flowitbranchpreffix":     branchPreffixValidator,
-		"flowitbranchsuffix":      branchSuffixValidator,
-		"flowitbranchtransitions": transitionsValidator,
-	})
+	err := registerCustomValidators(customValidators)
 	if err != nil {
 		return errors.Wrap(err, "Error registering validators")
 	}

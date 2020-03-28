@@ -7,14 +7,13 @@ import (
 // ProcessFlowitConfig reads, parses the specified yaml configuration file and returns a map with the key/values
 func ProcessFlowitConfig(configName string, configLocation string) (*Flowit, error) {
 
-	// TODO: Hash parsed and validated config and verify if it changed or not
-
-	err := readConfig(configName, configLocation)
+	// TODO: Hash parsed and validated config and verify if it changed or not?
+	viper, err := readConfig(configName, configLocation)
 	if err != nil {
 		return nil, errors.Wrap(err, "Config reading error")
 	}
 
-	flowit, err := unmarshallConfig()
+	flowit, err := unmarshallConfig(viper)
 	if err != nil {
 		return nil, errors.Wrap(err, "Config unmarshalling error")
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig() (Flowit, error) {
+func unmarshallConfig(v *viper.Viper) (Flowit, error) {
 
 	var flowit Flowit
 
@@ -16,7 +16,7 @@ func unmarshallConfig() (Flowit, error) {
 		c.WeaklyTypedInput = false
 	}
 
-	err := viper.UnmarshalKey("flowit", &flowit, config)
+	err := (*v).UnmarshalKey("flowit", &flowit, config)
 	if err != nil {
 		return flowit, errors.Wrap(err, "Validation error")
 	}
