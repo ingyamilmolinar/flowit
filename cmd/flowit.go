@@ -6,10 +6,11 @@ import (
 	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
-const mainCommand = "flowit"
-const configFile = "git-flow"
-
 func main() {
+	
+	const mainCommand = "flowit"
+	const configFile = "git-flow"
+
 	_, err := configs.ProcessFlowitConfig(configFile, utils.GetRootDirectory()+"/samples/")
 	utils.ExitIfErr(err)
 	err = commands.RegisterCommands(mainCommand)

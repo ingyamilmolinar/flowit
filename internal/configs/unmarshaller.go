@@ -7,9 +7,9 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig(v *viper.Viper) (*Flowit, error) {
+func unmarshallConfig(v *viper.Viper) (*RawFlowitConfig, error) {
 
-	var flowit Flowit
+	var flowit RawFlowitConfig
 
 	config := func(c *mapstructure.DecoderConfig) {
 		c.ErrorUnused = true

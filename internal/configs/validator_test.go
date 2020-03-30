@@ -13,22 +13,40 @@ var _ = Describe("Configs", func() {
 
 			It("should return a nil error", func() {
 
-				var flowit Flowit
+				var flowit RawFlowitConfig
 
 				version := "0.1"
 				branchID := "master"
 				branchName := "master"
 				branchEternal := true
 				branchProtected := true
-				workflowBranch := branch{
+				workflowBranch := rawBranch{
 					ID:        &branchID,
 					Name:      &branchName,
 					Eternal:   &branchEternal,
 					Protected: &branchProtected,
 				}
-				workflow := workflow{
-					Branches: []*branch{
+				startStage := "start"
+				finishStage := "finish"
+				action := "action"
+				actions := []*string{
+					&action,
+				}
+				workflowStage := rawStage{
+					Start:   &startStage,
+					Finish:  &finishStage,
+					Actions: actions,
+				}
+				workflow := rawWorkflow{
+					Branches: []*rawBranch{
 						&workflowBranch,
+					},
+					Stages: []*rawBranchType{
+						{
+							"dev": []*rawStage{
+								&workflowStage,
+							},
+						},
 					},
 				}
 

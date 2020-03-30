@@ -68,22 +68,17 @@ flowit:
     - id: release
       format: v[0-9]+\.[0-9]+\.[0-9]+
       stages:
-      - release:
-        - finish
-      - hotfix:
-        - finish
-      branches: 
-      - master
+        release: [ finish ]
+        hotfix: [ finish ]
+      branches: [ master ]
 
     - id: dev
       format: dev
-      branches:
-      - develop
+      branches: [ develop ]
 
     - id: stage
       format: stage
-      branches:
-      - release
+      branches: [ release ]
 
     # TODO: What if a stage does not have anything to do with a branch type?
     # Ex: "release" stage will not create a branch, it will just tag master and push

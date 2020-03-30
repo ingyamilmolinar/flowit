@@ -21,7 +21,7 @@ var customValidators = map[string]interface{}{
 }
 
 // ValidateConfig takes a viper configuration and validates it section by section
-func validateConfig(flowit *Flowit) error {
+func validateConfig(flowit *RawFlowitConfig) error {
 
 	valid.SetFieldsRequiredByDefault(true)
 	valid.SetNilPtrAllowedByRequired(false)

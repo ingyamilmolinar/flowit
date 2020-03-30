@@ -6,8 +6,8 @@ import (
 
 func branchesValidator(current interface{}, parent interface{}) bool {
 	switch current.(type) {
-	case []*branch:
-		branches := current.([]*branch)
+	case []*rawBranch:
+		branches := current.([]*rawBranch)
 		if len(branches) == 0 {
 			return false
 		}
@@ -47,18 +47,18 @@ func validIdentifier(str string) bool {
 func transitionsValidator(current interface{}, parent interface{}) bool {
 	isParentBranchEternal := false
 	switch parent.(type) {
-	case branch:
-		if parent.(branch).Eternal == nil {
+	case rawBranch:
+		if parent.(rawBranch).Eternal == nil {
 			return false
 		}
-		isParentBranchEternal = *(parent.(branch).Eternal)
+		isParentBranchEternal = *(parent.(rawBranch).Eternal)
 	default:
 		return false
 	}
 
 	switch current.(type) {
-	case []*transition:
-		transitions := current.([]*transition)
+	case []*rawTransition:
+		transitions := current.([]*rawTransition)
 		if (!isParentBranchEternal && len(transitions) == 0) || (isParentBranchEternal && len(transitions) > 0) {
 			return false
 		}

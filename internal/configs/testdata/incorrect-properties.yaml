@@ -15,33 +15,34 @@ flowit:
       protected: false
 
     stages:
-    - start: < jira-issue-id | Related Jira Issue ID >
-      conditions:
-      - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
-      actions:
-      - git checkout master
-      - git pull origin master
-      - jira transition $<jira-issue-id> 'In progress'
+    - development:
+      - start: < jira-issue-id | Related Jira Issue ID >
+        conditions:
+        - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+        actions:
+        - git checkout master
+        - git pull origin master
+        - jira transition $<jira-issue-id> 'In progress'
 
-    - sync:
-      actions:
-      - git checkout master
-      - git pull origin master
+      - sync:
+        actions:
+        - git checkout master
+        - git pull origin master
 
-    - publish:
-      conditions:
-      - ./run-tests.sh
-      - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
-      actions:
-      - git checkout master
-      - git push origin HEAD:refs/for/master
-      - jira transition $<jira-issue-id> 'In code review'
+      - publish:
+        conditions:
+        - ./run-tests.sh
+        - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
+        actions:
+        - git checkout master
+        - git push origin HEAD:refs/for/master
+        - jira transition $<jira-issue-id> 'In code review'
 
-    - finish:
-      conditions:
-      - "[[ $(ssh -p $<gerrit-port> $<gerrit-host> gerrit review $(git rev-parse master)) == *'+2'* ]]"
-      actions:
-      - ssh -p $<gerrit-port> $<gerrit-host> gerrit review --submit $(git rev-parse master)
-      - git checkout master
-      - git pull origin master
-      - jira transition $<jira-issue-id> 'Done'
+      - finish:
+        conditions:
+        - "[[ $(ssh -p $<gerrit-port> $<gerrit-host> gerrit review $(git rev-parse master)) == *'+2'* ]]"
+        actions:
+        - ssh -p $<gerrit-port> $<gerrit-host> gerrit review --submit $(git rev-parse master)
+        - git checkout master
+        - git pull origin master
+        - jira transition $<jira-issue-id> 'Done'

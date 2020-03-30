@@ -5,7 +5,7 @@ import (
 )
 
 // ProcessFlowitConfig reads, parses the specified yaml configuration file and returns a map with the key/values
-func ProcessFlowitConfig(configName string, configLocation string) (*Flowit, error) {
+func ProcessFlowitConfig(configName string, configLocation string) (*FlowitConfig, error) {
 
 	// TODO: Hash parsed and validated config and verify if it changed or not?
 	viper, err := readConfig(configName, configLocation)
@@ -13,14 +13,22 @@ func ProcessFlowitConfig(configName string, configLocation string) (*Flowit, err
 		return nil, errors.Wrap(err, "Config reading error")
 	}
 
-	flowit, err := unmarshallConfig(viper)
+	rawConfig, err := unmarshallConfig(viper)
 	if err != nil {
 		return nil, errors.Wrap(err, "Config unmarshalling error")
 	}
 
-	err = validateConfig(flowit)
+	err = validateConfig(rawConfig)
 	if err != nil {
-		return flowit, errors.Wrap(err, "Config validation error")
+		return nil, errors.Wrap(err, "Config validation error")
 	}
-	return flowit, nil
+
+	//TODO: Include defaults on rawConfig, use viper
+
+	var config FlowitConfig
+	err = deepCopy(rawConfig, &config)
+	if err != nil {
+		return nil, errors.Wrap(err, "Config copying error")
+	}
+	return &config, nil
 }
