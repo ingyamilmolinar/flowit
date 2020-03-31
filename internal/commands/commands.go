@@ -12,8 +12,7 @@ func RegisterCommands(mainCommand string) error {
 		Run: func(cmd *cobra.Command, args []string) {
 		},
 	}
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		return errors.Wrap(err, "Command execution error")
 	}
 	return nil

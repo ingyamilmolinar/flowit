@@ -1,20 +1,19 @@
-package configs
+package config
 
 import (
-	valid "github.com/asaskevich/govalidator"
+	validator "github.com/asaskevich/govalidator"
 )
 
 func branchesValidator(current interface{}, parent interface{}) bool {
-	switch current.(type) {
+	switch current := current.(type) {
 	case []*rawBranch:
-		branches := current.([]*rawBranch)
+		branches := current
 		if len(branches) == 0 {
 			return false
 		}
 		for _, branch := range branches {
 			// TODO: This is hiding internal errors
-			ok, _ := valid.ValidateStruct(*branch)
-			if !ok {
+			if ok, _ := validator.ValidateStruct(*branch); !ok {
 				return false
 			}
 		}
@@ -41,24 +40,25 @@ func branchSuffixValidator(suffix string) bool {
 }
 
 func validIdentifier(str string) bool {
-	return str != "" && !valid.HasWhitespace(str) && valid.IsPrintableASCII(str)
+	return str != "" && !validator.HasWhitespace(str) && validator.IsPrintableASCII(str)
 }
 
 func transitionsValidator(current interface{}, parent interface{}) bool {
 	isParentBranchEternal := false
-	switch parent.(type) {
+	switch parent := parent.(type) {
 	case rawBranch:
-		if parent.(rawBranch).Eternal == nil {
+		branch := parent
+		if branch.Eternal == nil {
 			return false
 		}
-		isParentBranchEternal = *(parent.(rawBranch).Eternal)
+		isParentBranchEternal = *branch.Eternal
 	default:
 		return false
 	}
 
-	switch current.(type) {
+	switch current := current.(type) {
 	case []*rawTransition:
-		transitions := current.([]*rawTransition)
+		transitions := current
 		if (!isParentBranchEternal && len(transitions) == 0) || (isParentBranchEternal && len(transitions) > 0) {
 			return false
 		}

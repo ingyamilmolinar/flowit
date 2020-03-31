@@ -1,13 +1,15 @@
-package configs
+package config
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
-var _ = Describe("Configs", func() {
+var _ = Describe("Config", func() {
 
 	Describe("Unmarshalling external configuration file", func() {
 
@@ -16,7 +18,10 @@ var _ = Describe("Configs", func() {
 			It("should return a populated viper struct", func() {
 				viper := viper.New()
 				viper.SetConfigFile("./testdata/valid.yaml")
-				viper.ReadInConfig()
+				if err := viper.ReadInConfig(); err != nil {
+					Fail(fmt.Sprintf("Error reading config %+v", err))
+				}
+
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
 				Expect(*flowit.Version).To(Equal("0.1"))
@@ -25,7 +30,9 @@ var _ = Describe("Configs", func() {
 			It("should set nil on missing sections", func() {
 				viper := viper.New()
 				viper.SetConfigFile("./testdata/missing-sections.yaml")
-				viper.ReadInConfig()
+				if err := viper.ReadInConfig(); err != nil {
+					Fail(fmt.Sprintf("Error reading config %+v", err))
+				}
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
 				Expect(flowit.Config).To(BeNil())
@@ -39,7 +46,9 @@ var _ = Describe("Configs", func() {
 			It("should return an informative error for incorrect types", func() {
 				viper := viper.New()
 				viper.SetConfigFile("./testdata/incorrect-types.yaml")
-				viper.ReadInConfig()
+				if err := viper.ReadInConfig(); err != nil {
+					Fail(fmt.Sprintf("Error reading config %+v", err))
+				}
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))

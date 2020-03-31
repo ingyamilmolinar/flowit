@@ -1,6 +1,7 @@
-package configs
+package config
 
 import (
+	"fmt"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -8,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var _ = Describe("Configs", func() {
+var _ = Describe("Config", func() {
 
 	Describe("Reading external configuration file", func() {
 
@@ -48,8 +49,15 @@ var _ = Describe("Configs", func() {
 
 			It("should return an informative error", func() {
 				fileName := "./testdata/valid.yaml"
-				os.Chmod(fileName, 0000)
-				defer os.Chmod(fileName, 0644)
+				if err := os.Chmod(fileName, 0000); err != nil {
+					Fail(fmt.Sprintf("Error changing test file: "+fileName+" permissions: %+v", err))
+				}
+
+				defer func() {
+					if err := os.Chmod(fileName, 0644); err != nil {
+						Fail(fmt.Sprintf("Error restoring test file: "+fileName+" permissions: %+v", err))
+					}
+				}()
 				viper, err := readConfig("valid", "./testdata")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("permission denied"))

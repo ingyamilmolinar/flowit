@@ -1,4 +1,4 @@
-package configs
+package utils
 
 import (
 	"bytes"
@@ -7,17 +7,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-func deepCopy(from interface{}, to interface{}) error {
-	// TODO: Check that both inputs are pointers
+// DeepCopy copies recursively an object into another
+func DeepCopy(from interface{}, to interface{}) error {
 	buff := new(bytes.Buffer)
 	enc := gob.NewEncoder(buff)
 	dec := gob.NewDecoder(buff)
-	err := enc.Encode(from)
-	if err != nil {
+	if err := enc.Encode(from); err != nil {
 		return errors.Wrap(err, "Error encoding config")
 	}
-	err = dec.Decode(to)
-	if err != nil {
+	if err := dec.Decode(to); err != nil {
 		return errors.Wrap(err, "Error decoding config")
 	}
 	return nil

@@ -5,13 +5,16 @@ import (
 	"runtime"
 )
 
-var (
-	_, b, _, _ = runtime.Caller(0)
-	basepath   = filepath.Dir(b)
-)
+var currentExecDir string
 
-// GetRootDirectory gets the project root directory
+func init() {
+	/* #dogsled */
+	_, currentExecFilename, _, _ := runtime.Caller(0)
+	currentExecDir = filepath.Dir(currentExecFilename)
+}
+
+// GetProjectRootDir gets the project's root directory
 // TODO: This assumes a two level deep directory which is very error prone
-func GetRootDirectory() string {
-	return basepath + "/../../"
+func GetProjectRootDir() string {
+	return currentExecDir + "/../../"
 }

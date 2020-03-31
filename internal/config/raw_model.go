@@ -1,7 +1,8 @@
-package configs
+package config
 
-// RawFlowitConfig is the typed data structure for populating the input configuration
-type RawFlowitConfig struct {
+// rawFlowitConfig is the typed data structure for populating the input configuration
+// pointers are used to be able to signal between unset values and zero values
+type rawFlowitConfig struct {
 	Version   *string       `valid:"flowitversion~Unsupported flowit version,required"`
 	Config    *rawConfig    `valid:"optional"`
 	Variables *rawVariables `valid:"-"`
@@ -56,60 +57,4 @@ type rawStage struct {
 type rawTransition struct {
 	From *string   `valid:"required"`
 	To   []*string `valid:"required"`
-}
-
-// FlowitConfig is the user friendly data structure for consuming the input configuration
-type FlowitConfig struct {
-	Version   string
-	Config    config
-	Variables variables
-	Workflow  workflow
-}
-
-type config struct {
-	AbortOnFailedAction bool
-	Strict              bool
-	Shell               string
-}
-type variables map[string]interface{}
-
-type workflow struct {
-	Branches []branch
-	Tags     []tag
-	Stages   []branchType
-}
-
-type branch struct {
-	ID          string
-	Name        string
-	Prefix      string
-	Suffix      string
-	Eternal     bool
-	Protected   bool
-	Transitions []transition
-}
-
-type tag struct {
-	ID       string
-	Format   string
-	Stages   map[string][]string
-	Branches []string
-}
-
-type branchType map[string][]stage
-
-type stage struct {
-	//Name       *map[string]interface{} `valid:"required"`
-	Start      string
-	Fetch      string
-	Sync       string
-	Publish    string
-	Finish     string
-	Conditions []string
-	Actions    []string
-}
-
-type transition struct {
-	From string
-	To   []string
 }

@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	"github.com/mitchellh/mapstructure"
@@ -7,17 +7,16 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig(v *viper.Viper) (*RawFlowitConfig, error) {
+func unmarshallConfig(v *viper.Viper) (*rawFlowitConfig, error) {
 
-	var flowit RawFlowitConfig
+	var flowit rawFlowitConfig
 
 	config := func(c *mapstructure.DecoderConfig) {
 		c.ErrorUnused = true
 		c.WeaklyTypedInput = false
 	}
 
-	err := (*v).UnmarshalKey("flowit", &flowit, config)
-	if err != nil {
+	if err := (*v).UnmarshalKey("flowit", &flowit, config); err != nil {
 		return nil, errors.Wrap(err, "Validation error")
 	}
 	return &flowit, nil

@@ -1,11 +1,11 @@
-package configs
+package config
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Configs", func() {
+var _ = Describe("Config", func() {
 
 	Describe("Validating configuration", func() {
 
@@ -13,7 +13,7 @@ var _ = Describe("Configs", func() {
 
 			It("should return a nil error", func() {
 
-				var flowit RawFlowitConfig
+				var flowit rawFlowitConfig
 
 				version := "0.1"
 				branchID := "master"
