@@ -18,7 +18,7 @@ type variables map[string]interface{}
 type workflow struct {
 	Branches []branch
 	Tags     []tag
-	Stages   []branchType
+	Stages   []workflowType
 }
 
 type branch struct {
@@ -38,18 +38,9 @@ type tag struct {
 	Branches []string
 }
 
-type branchType map[string][]stage
+type workflowType map[string][]stage
 
-type stage struct {
-	//Name       *map[string]interface{} `valid:"required"`
-	Start      string
-	Fetch      string
-	Sync       string
-	Publish    string
-	Finish     string
-	Conditions []string
-	Actions    []string
-}
+type stage map[string]interface{}
 
 type transition struct {
 	From string

@@ -51,8 +51,8 @@ var _ = Describe("Config", func() {
 				}
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(Not(BeNil()))
+				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))
-				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Workflow.Branches"))
 				Expect(flowit).To(BeNil())
 			})

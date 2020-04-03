@@ -19,7 +19,7 @@ func ProcessFlowitConfig(configName string, configLocation string) (*FlowitConfi
 		return nil, errors.Wrap(err, "Config unmarshalling error")
 	}
 
-	if err := validateConfig(rawConfig); err != nil {
+	if err = validateConfig(rawConfig); err != nil {
 		return nil, errors.Wrap(err, "Config validation error")
 	}
 

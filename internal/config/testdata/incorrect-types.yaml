@@ -19,7 +19,8 @@ flowit:
 
     stages:
     - development:
-      - start: < jira-issue-id | Related Jira Issue ID >
+      - id: start
+        args: < jira-issue-id | Related Jira Issue ID >
         conditions:
         - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
         actions:
@@ -27,12 +28,12 @@ flowit:
         - git pull origin master
         - jira transition $<jira-issue-id> 'In progress'
 
-      - sync:
+      - id: sync
         actions:
         - git checkout master
         - git pull origin master
 
-      - publish:
+      - id: publish
         conditions:
         - ./run-tests.sh
         - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
@@ -41,7 +42,7 @@ flowit:
         - git push origin HEAD:refs/for/master
         - jira transition $<jira-issue-id> 'In code review'
 
-      - finish:
+      - id: finish
         conditions:
         - "[[ $(ssh -p $<gerrit-port> $<gerrit-host> gerrit review $(git rev-parse master)) == *'+2'* ]]"
         actions:

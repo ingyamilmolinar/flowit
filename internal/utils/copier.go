@@ -12,6 +12,7 @@ func DeepCopy(from interface{}, to interface{}) error {
 	buff := new(bytes.Buffer)
 	enc := gob.NewEncoder(buff)
 	dec := gob.NewDecoder(buff)
+	gob.Register([]interface{}{})
 	if err := enc.Encode(from); err != nil {
 		return errors.Wrap(err, "Error encoding config")
 	}

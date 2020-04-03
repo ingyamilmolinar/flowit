@@ -23,7 +23,8 @@ var _ = Describe("Config", func() {
 				/* #gomnd */
 				Expect(flowit.Variables["gerrit-port"]).To(Equal(29418))
 				Expect(flowit.Workflow.Branches[0].ID).To(Equal("master"))
-				Expect(flowit.Workflow.Stages[0]["development"][0].Actions[0]).To(Equal("git checkout master"))
+				Expect(flowit.Workflow.Stages[0]["development"][0]["actions"].([]interface{})[0].(string)).
+					To(Equal("git checkout master"))
 			})
 
 		})

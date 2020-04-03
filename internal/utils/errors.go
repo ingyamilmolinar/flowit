@@ -9,7 +9,7 @@ import (
 func ExitIfErr(err error) {
 	if err != nil {
 		const exitStatus = 1
-		GetLogger().Error(fmt.Sprintf("%+v", err))
+		GetLogger().Error(fmt.Sprintf("%v", err))
 		os.Exit(exitStatus)
 	}
 }

@@ -3,6 +3,7 @@ package config
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
 var _ = Describe("Config", func() {
@@ -13,46 +14,31 @@ var _ = Describe("Config", func() {
 
 			It("should return a nil error", func() {
 
-				var flowit rawFlowitConfig
+				var flowit FlowitConfig
 
-				version := "0.1"
-				branchID := "master"
-				branchName := "master"
-				branchEternal := true
-				branchProtected := true
-				workflowBranch := rawBranch{
-					ID:        &branchID,
-					Name:      &branchName,
-					Eternal:   &branchEternal,
-					Protected: &branchProtected,
-				}
-				startStage := "start"
-				finishStage := "finish"
-				action := "action"
-				actions := []*string{
-					&action,
-				}
-				workflowStage := rawStage{
-					Start:   &startStage,
-					Finish:  &finishStage,
-					Actions: actions,
-				}
-				workflow := rawWorkflow{
-					Branches: []*rawBranch{
-						&workflowBranch,
+				flowit.Version = "0.1"
+				flowit.Workflow.Branches = []branch{
+					{
+						ID:        "master",
+						Name:      "master",
+						Eternal:   true,
+						Protected: true,
 					},
-					Stages: []*rawBranchType{
-						{
-							"dev": []*rawStage{
-								&workflowStage,
+				}
+				flowit.Workflow.Stages = []workflowType{
+					{
+						"dev": []stage{
+							{
+								"id":      "start",
+								"actions": []string{"action1", "action2"},
 							},
 						},
 					},
 				}
 
-				flowit.Version = &version
-				flowit.Workflow = &workflow
-				err := validateConfig(&flowit)
+				rawFlowit := rawify(&flowit)
+
+				err := validateConfig(rawFlowit)
 				Expect(err).To(BeNil())
 
 			})
@@ -61,3 +47,11 @@ var _ = Describe("Config", func() {
 
 	})
 })
+
+func rawify(config *FlowitConfig) *rawFlowitConfig {
+	var rawConfig rawFlowitConfig
+	if err := utils.DeepCopy(config, &rawConfig); err != nil {
+		return nil
+	}
+	return &rawConfig
+}
