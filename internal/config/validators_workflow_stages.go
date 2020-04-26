@@ -30,7 +30,7 @@ func stageMapValidator(workflowTypeMap interface{}) error {
 	}
 }
 
-// TODO: We may need to validate our variable syntax
+// POST MVP: We may need to validate our variable syntax
 func workflowTypeValidator(workflowType interface{}) error {
 	switch workflowType := workflowType.(type) {
 	case string:
@@ -99,7 +99,14 @@ func stageArgsValidator(args interface{}) error {
 // TODO: We may need to validate our variable syntax
 func stageConditionsValidator(conditions interface{}) error {
 	switch conditions := conditions.(type) {
-	case []interface{}, []string:
+	//TODO: Why not? case []string:
+	case []interface{}:
+		for _, condition := range conditions {
+			_, ok := condition.(string)
+			if !ok {
+				return errors.New("Invalid workflow.stages condition type. Got " + reflect.TypeOf(condition).Name())
+			}
+		}
 		return nil
 	default:
 		return errors.New("Invalid workflow.stages conditions type. Got " + reflect.TypeOf(conditions).Name())
@@ -109,7 +116,14 @@ func stageConditionsValidator(conditions interface{}) error {
 // TODO: We may need to validate our variable syntax
 func stageActionsValidator(actions interface{}) error {
 	switch actions := actions.(type) {
-	case []interface{}, []string:
+	//TODO: Why not? case []string:
+	case []interface{}:
+		for _, action := range actions {
+			_, ok := action.(string)
+			if !ok {
+				return errors.New("Invalid workflow.stages action type. Got " + reflect.TypeOf(action).Name())
+			}
+		}
 		return nil
 	default:
 		return errors.New("Invalid workflow.stages actions type. Got " + reflect.TypeOf(actions).Name())

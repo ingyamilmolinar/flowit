@@ -14,6 +14,7 @@ func ProcessFlowitConfig(configName string, configLocation string) (*FlowitConfi
 		return nil, errors.Wrap(err, "Config reading error")
 	}
 
+	// TODO: Viper is allowing repeated keys...
 	rawConfig, err := unmarshallConfig(viper)
 	if err != nil {
 		return nil, errors.Wrap(err, "Config unmarshalling error")

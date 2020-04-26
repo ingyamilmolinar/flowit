@@ -7,13 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func workflowRules() []validator.Rule {
-	return []validator.Rule{
-		validator.Required,
-		validator.By(workflowValidator),
-	}
-}
-
 func workflowValidator(workflow interface{}) error {
 	switch workflow := workflow.(type) {
 	case *rawWorkflow:

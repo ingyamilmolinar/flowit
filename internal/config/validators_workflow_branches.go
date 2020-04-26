@@ -41,18 +41,18 @@ func branchIDValidator(id interface{}) error {
 func branchNameValidator(name interface{}) error {
 	return validator.Validate(name,
 		validator.Required,
-		validator.By(validIdentifier),
+		validator.By(validName),
 	)
 }
 
 // TODO: We may need to validate our variable syntax
 func branchPreffixValidator(preffix interface{}) error {
-	return validIdentifier(preffix)
+	return validName(preffix)
 }
 
 // TODO: We may need to validate our variable syntax
 func branchSuffixValidator(suffix interface{}) error {
-	return validIdentifier(suffix)
+	return validName(suffix)
 }
 
 func branchTransitionsValidator(eternal *bool) validator.RuleFunc {
@@ -64,6 +64,7 @@ func branchTransitionsValidator(eternal *bool) validator.RuleFunc {
 			} else if *eternal && len(transitions) > 0 {
 				return errors.New("Invalid branch transitions: Transitions must not be specified for eternal branches")
 			}
+			// TODO: Check for repeated transitions
 			return nil
 		default:
 			return errors.New("Invalid branch.transitions type. Got " + reflect.TypeOf(transitions).Name())

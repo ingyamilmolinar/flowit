@@ -12,6 +12,10 @@ import (
 func configValidator(config interface{}) error {
 	switch config := config.(type) {
 	case *rawConfig:
+		// config is optional
+		if config == nil {
+			return nil
+		}
 		return validator.Validate(config.Shell, validator.By(shellValidator))
 	default:
 		return errors.New("Invalid flowit.config type. Got " + reflect.TypeOf(config).Name())

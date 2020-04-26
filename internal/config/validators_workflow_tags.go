@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 
 	validator "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 func tagValidator(workflows []*rawWorkflowType, branches []*rawBranch) validator.RuleFunc {
@@ -35,7 +34,7 @@ func tagIDValidator(id interface{}) error {
 // TODO: More thought needs to be put into this
 func tagFormatValidator(format interface{}) error {
 	return validator.Validate(format,
-		is.PrintableASCII,
+		commonNamingRules()...,
 	)
 }
 
@@ -52,7 +51,6 @@ func tagStagesValidator(workflows []*rawWorkflowType) validator.RuleFunc {
 					if workflowStages == nil {
 						return nil
 					}
-					// TODO: Does not work if workflow has variables
 					if _, ok := (*workflowStages)[workflow]; !ok {
 						continue
 					}

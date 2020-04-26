@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// ExitIfErr logs and panics if an error exists
-func ExitIfErr(err error) {
+// OptionalExit logs and panics if an error exists
+func OptionalExit(err error) {
 	if err != nil {
 		const exitStatus = 1
 		GetLogger().Error(fmt.Sprintf("%v", err))

@@ -16,12 +16,12 @@ var _ = Describe("Config", func() {
 
 			It("should return a populated Flowit structure", func() {
 				flowitptr, err := config.ProcessFlowitConfig("valid", "./testdata")
-				flowit := (*flowitptr)
 				Expect(err).To(BeNil())
+				flowit := (*flowitptr)
 				Expect(flowit.Version).To(Equal("0.1"))
 				Expect(flowit.Config.Shell).To(Equal("/usr/bin/env bash"))
 				/* #gomnd */
-				Expect(flowit.Variables["gerrit-port"]).To(Equal(29418))
+				Expect(flowit.Variables["gerrit-port"]).To(Equal(float64(29418)))
 				Expect(flowit.Workflow.Branches[0].ID).To(Equal("master"))
 				Expect(flowit.Workflow.Stages[0]["development"][0]["actions"].([]interface{})[0].(string)).
 					To(Equal("git checkout master"))

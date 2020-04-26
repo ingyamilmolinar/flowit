@@ -1,23 +1,23 @@
 package utils
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
 
-// DeepCopy copies recursively an object into another
+// DeepCopy copies recursively an object into another using encoding/json
+// encoding/gob was not used even though is faster because it does not preserve zero values
+// See: https://github.com/golang/go/issues/4609
 func DeepCopy(from interface{}, to interface{}) error {
-	buff := new(bytes.Buffer)
-	enc := gob.NewEncoder(buff)
-	dec := gob.NewDecoder(buff)
-	gob.Register([]interface{}{})
-	if err := enc.Encode(from); err != nil {
-		return errors.Wrap(err, "Error encoding config")
+	bytes, err := json.Marshal(from)
+	if err != nil {
+		fmt.Println(err.Error())
+		return errors.Wrap(err, "Deep copy error while marshalling")
 	}
-	if err := dec.Decode(to); err != nil {
-		return errors.Wrap(err, "Error decoding config")
+	if err := json.Unmarshal(bytes, to); err != nil {
+		return errors.Wrap(err, "Deep copy error while unmarshalling")
 	}
 	return nil
 }

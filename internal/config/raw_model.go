@@ -42,6 +42,7 @@ type rawTag struct {
 
 type rawWorkflowType map[string][]*rawStage
 
+// TODO: Can this be map[string]string | map[string][]string?
 type rawStage map[string]interface{}
 
 type rawTransition struct {

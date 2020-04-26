@@ -13,8 +13,7 @@ func main() {
 	const samplesDir = "samples"
 
 	_, err := config.ProcessFlowitConfig(configFile, utils.GetProjectRootDir()+"/"+samplesDir)
-	//TODO: This is weird
-	utils.ExitIfErr(err)
+	utils.OptionalExit(err)
 	err = commands.RegisterCommands(mainCommand)
-	utils.ExitIfErr(err)
+	utils.OptionalExit(err)
 }
