@@ -18,7 +18,7 @@ func configValidator(config interface{}) error {
 		}
 		return validator.Validate(config.Shell, validator.By(shellValidator))
 	default:
-		return errors.New("Invalid flowit.config type. Got " + reflect.TypeOf(config).Name())
+		return errors.New("Invalid config type. Got " + reflect.TypeOf(config).Name())
 	}
 }
 
@@ -34,7 +34,7 @@ func shellValidator(shell interface{}) error {
 			return err
 		}
 	default:
-		return errors.New("Invalid config.shell type. Got " + reflect.TypeOf(shell).Name())
+		return errors.New("Invalid config shell type. Got " + reflect.TypeOf(shell).Name())
 	}
 	return nil
 }

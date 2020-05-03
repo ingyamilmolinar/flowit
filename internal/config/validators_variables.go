@@ -15,7 +15,7 @@ func variablesValidator(variables interface{}) error {
 			return nil
 		}
 		if len(*variables) == 0 {
-			return errors.New("flowit.variables can not be both present on the configuration AND empty")
+			return errors.New("Variables can not be both present on the configuration AND empty")
 		}
 		for _, variableValue := range *variables {
 			if err := validator.Validate(variableValue, validator.By(variableValueValidator)); err != nil {
@@ -24,7 +24,7 @@ func variablesValidator(variables interface{}) error {
 		}
 		return nil
 	default:
-		return errors.New("Invalid flowit.variables type. Got " + reflect.TypeOf(variables).Name())
+		return errors.New("Invalid variables type. Got " + reflect.TypeOf(variables).Name())
 	}
 }
 

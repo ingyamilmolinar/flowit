@@ -26,7 +26,7 @@ func workflowMapValidator(workflowMap interface{}) error {
 		}
 		return nil
 	default:
-		return errors.New("Invalid workflow.workflows type. Got " + reflect.TypeOf(workflowMap).Name())
+		return errors.New("Invalid workflows type. Got " + reflect.TypeOf(workflowMap).Name())
 	}
 }
 
@@ -36,7 +36,7 @@ func workflowValidator(workflow interface{}) error {
 	case string:
 		return nil
 	default:
-		return errors.New("Invalid workflow.workflows workflow type. Got " + reflect.TypeOf(workflow).Name())
+		return errors.New("Invalid workflows workflow type. Got " + reflect.TypeOf(workflow).Name())
 	}
 }
 
@@ -75,7 +75,7 @@ func stageValidator(stage interface{}) error {
 			return errors.New("Invalid workflow stage: non optional section 'actions' was not found")
 		}
 	default:
-		return errors.New("Invalid workflow.stages workflow type. Got " + reflect.TypeOf(stage).Name())
+		return errors.New("Invalid workflow stages type. Got " + reflect.TypeOf(stage).Name())
 	}
 	return nil
 }
@@ -89,43 +89,50 @@ func stageIDValidator(id interface{}) error {
 // TODO: We may need to validate our variable syntax
 func stageArgsValidator(args interface{}) error {
 	switch args := args.(type) {
-	case string:
+	// TODO: Abstract repeated code
+	case []interface{}:
+		for _, action := range args {
+			_, ok := action.(string)
+			if !ok {
+				return errors.New("Invalid workflow stages arg type. Got " + reflect.TypeOf(action).Name())
+			}
+		}
 		return nil
 	default:
-		return errors.New("Invalid workflow.stages args type. Got " + reflect.TypeOf(args).Name())
+		return errors.New("Invalid workflow stages args type. Got " + reflect.TypeOf(args).Name())
 	}
 }
 
 // TODO: We may need to validate our variable syntax
 func stageConditionsValidator(conditions interface{}) error {
 	switch conditions := conditions.(type) {
-	//TODO: Why not? case []string:
+	// TODO: Abstract repeated code
 	case []interface{}:
 		for _, condition := range conditions {
 			_, ok := condition.(string)
 			if !ok {
-				return errors.New("Invalid workflow.stages condition type. Got " + reflect.TypeOf(condition).Name())
+				return errors.New("Invalid workflow stages condition type. Got " + reflect.TypeOf(condition).Name())
 			}
 		}
 		return nil
 	default:
-		return errors.New("Invalid workflow.stages conditions type. Got " + reflect.TypeOf(conditions).Name())
+		return errors.New("Invalid workflow stages conditions type. Got " + reflect.TypeOf(conditions).Name())
 	}
 }
 
 // TODO: We may need to validate our variable syntax
 func stageActionsValidator(actions interface{}) error {
 	switch actions := actions.(type) {
-	//TODO: Why not? case []string:
+	// TODO: Abstract repeated code
 	case []interface{}:
 		for _, action := range actions {
 			_, ok := action.(string)
 			if !ok {
-				return errors.New("Invalid workflow.stages action type. Got " + reflect.TypeOf(action).Name())
+				return errors.New("Invalid workflow stages action type. Got " + reflect.TypeOf(action).Name())
 			}
 		}
 		return nil
 	default:
-		return errors.New("Invalid workflow.stages actions type. Got " + reflect.TypeOf(actions).Name())
+		return errors.New("Invalid workflow stages actions type. Got " + reflect.TypeOf(actions).Name())
 	}
 }

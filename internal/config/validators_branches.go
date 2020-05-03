@@ -25,7 +25,7 @@ func branchValidator(branches []*rawBranch) validator.RuleFunc {
 					validator.Each(validator.By(branchTransitionValidator(branches)))),
 			)
 		default:
-			return errors.New("Invalid workflow.branch type. Got " + reflect.TypeOf(branch).Name())
+			return errors.New("Invalid branch type. Got " + reflect.TypeOf(branch).Name())
 		}
 	}
 }
@@ -67,7 +67,7 @@ func branchTransitionsValidator(eternal *bool) validator.RuleFunc {
 			// TODO: Check for repeated transitions
 			return nil
 		default:
-			return errors.New("Invalid branch.transitions type. Got " + reflect.TypeOf(transitions).Name())
+			return errors.New("Invalid branch transitions type. Got " + reflect.TypeOf(transitions).Name())
 		}
 	}
 }
@@ -87,7 +87,7 @@ func branchTransitionValidator(branches []*rawBranch) validator.RuleFunc {
 						validator.By(branchTransitionToValidator(branches)))),
 			)
 		default:
-			return errors.New("Invalid branch.transition type. Got " + reflect.TypeOf(transition).Name())
+			return errors.New("Invalid branch transition type. Got " + reflect.TypeOf(transition).Name())
 		}
 	}
 }
@@ -101,7 +101,7 @@ func branchTransitionFromValidator(branches []*rawBranch) validator.RuleFunc {
 				return errors.New("Invalid branch transition: " + *from + " is not a defined branch")
 			}
 		default:
-			return errors.New("Invalid branch.transition.from type. Got " + reflect.TypeOf(from).Name())
+			return errors.New("Invalid branch transition 'from' type. Got " + reflect.TypeOf(from).Name())
 		}
 		return nil
 	}
@@ -124,7 +124,7 @@ func branchTransitionToValidator(branches []*rawBranch) validator.RuleFunc {
 				return errors.New("Invalid branch transition: " + branch + " option should be 'local' or 'remote'")
 			}
 		default:
-			return errors.New("Invalid branch.transition.to type. Got " + reflect.TypeOf(to).Name())
+			return errors.New("Invalid branch transition 'to' type. Got " + reflect.TypeOf(to).Name())
 		}
 		return nil
 	}

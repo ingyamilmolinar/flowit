@@ -42,8 +42,15 @@ type rawTag struct {
 
 type rawWorkflow map[string][]*rawStage
 
-// TODO: Can this be map[string]string | map[string][]string?
 type rawStage map[string]interface{}
+
+// TODO: Parse map into this struct
+/*type rawStage struct {
+	ID         *string
+	Args       []*string
+	Conditions []*string
+	Actions    []*string
+}*/
 
 type rawTransition struct {
 	From *string

@@ -352,7 +352,7 @@ var _ = Describe("Config", func() {
 					"workflow": []stage{
 						{
 							"id":   "my-id",
-							"args": "arg1 arg2",
+							"args": []string{"arg1", "arg2"},
 							"conditions": []string{
 								"condition1",
 							},

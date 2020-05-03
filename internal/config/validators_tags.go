@@ -19,7 +19,7 @@ func tagValidator(workflows []*rawWorkflow, branches []*rawBranch) validator.Rul
 				validator.Field(&tag.Branches, validator.Each(validator.By(tagBranchesValidator(branches)))),
 			)
 		default:
-			return errors.New("Invalid workflow.tag type. Got " + reflect.TypeOf(tag).Name())
+			return errors.New("Invalid tag type. Got " + reflect.TypeOf(tag).Name())
 		}
 	}
 }
@@ -65,7 +65,7 @@ func tagStagesValidator(workflows []*rawWorkflow) validator.RuleFunc {
 				}
 			}
 		default:
-			return errors.New("Invalid tag.stages type. Got " + reflect.TypeOf(stageMap).Name())
+			return errors.New("Invalid tag stages type. Got " + reflect.TypeOf(stageMap).Name())
 		}
 		return nil
 	}
@@ -96,7 +96,7 @@ func tagBranchesValidator(branches []*rawBranch) validator.RuleFunc {
 				return errors.New("Invalid tag branches: Branch " + branch + " is not defined")
 			}
 		default:
-			return errors.New("Invalid tag.branches type. Got " + reflect.TypeOf(branch).Name())
+			return errors.New("Invalid tag branches type. Got " + reflect.TypeOf(branch).Name())
 		}
 		return nil
 	}

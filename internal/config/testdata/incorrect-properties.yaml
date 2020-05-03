@@ -15,7 +15,8 @@ flowit:
   workflows:
   - development:
     - id: start
-      args: < jira-issue-id | Related Jira Issue ID >
+      args:
+      - < jira-issue-id | Related Jira Issue ID >
       conditions:
       - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
       actions:

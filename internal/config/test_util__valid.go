@@ -102,7 +102,7 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 			"feature": []stage{
 				{
 					"id":   "start",
-					"args": "arg1 arg2",
+					"args": []string{"arg1", "arg2"},
 					"conditions": []string{
 						"condition1",
 					},
