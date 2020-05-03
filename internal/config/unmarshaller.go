@@ -7,17 +7,19 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig(v *viper.Viper) (*rawFlowitConfig, error) {
+func unmarshallConfig(v *viper.Viper) (*rawWorkflowDefinition, error) {
 
-	var flowit rawFlowitConfig
+	var flowit rawWorkflowDefinition
 
 	config := func(c *mapstructure.DecoderConfig) {
 		c.ErrorUnused = true
 		c.WeaklyTypedInput = false
+		c.ZeroFields = true
 	}
 
-	if err := (*v).UnmarshalKey("flowit", &flowit, config); err != nil {
+	if err := (*v).UnmarshalExact(&flowit, config); err != nil {
 		return nil, errors.Wrap(err, "Validation error")
 	}
+
 	return &flowit, nil
 }

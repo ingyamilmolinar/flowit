@@ -1,38 +1,37 @@
 flowit:
   version: "0.1"
   # Optional sections: config, variables, tags are missing
-  workflow:
-    # Required section: branches is missing
-    stages:
-    - development:
-      - id: start
-        args: < jira-issue-id | Related Jira Issue ID >
-        conditions:
-        - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
-        actions:
-        - git checkout master
-        - git pull origin master
-        - jira transition $<jira-issue-id> 'In progress'
+  # Required section: branches is missing
+  workflows:
+  - development:
+    - id: start
+      args: < jira-issue-id | Related Jira Issue ID >
+      conditions:
+      - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+      actions:
+      - git checkout master
+      - git pull origin master
+      - jira transition $<jira-issue-id> 'In progress'
 
-      - id: sync
-        actions:
-        - git checkout master
-        - git pull origin master
+    - id: sync
+      actions:
+      - git checkout master
+      - git pull origin master
 
-      - id: publish
-        conditions:
-        - ./run-tests.sh
-        - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
-        actions:
-        - git checkout master
-        - git push origin HEAD:refs/for/master
-        - jira transition $<jira-issue-id> 'In code review'
+    - id: publish
+      conditions:
+      - ./run-tests.sh
+      - "[[ $(jira list --status $<jira-issue-id>) == *'In Progress'* ]]"
+      actions:
+      - git checkout master
+      - git push origin HEAD:refs/for/master
+      - jira transition $<jira-issue-id> 'In code review'
 
-      - id: finish
-        conditions:
-        - "[[ $(ssh -p $<gerrit-port> $<gerrit-host> gerrit review $(git rev-parse master)) == *'+2'* ]]"
-        actions:
-        - ssh -p $<gerrit-port> $<gerrit-host> gerrit review --submit $(git rev-parse master)
-        - git checkout master
-        - git pull origin master
-        - jira transition $<jira-issue-id> 'Done'
+    - id: finish
+      conditions:
+      - "[[ $(ssh -p $<gerrit-port> $<gerrit-host> gerrit review $(git rev-parse master)) == *'+2'* ]]"
+      actions:
+      - ssh -p $<gerrit-port> $<gerrit-host> gerrit review --submit $(git rev-parse master)
+      - git checkout master
+      - git pull origin master
+      - jira transition $<jira-issue-id> 'Done'

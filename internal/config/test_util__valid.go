@@ -1,11 +1,13 @@
 package config
 
-func validConfigJustMandatoryFields() rawFlowitConfig {
+func validConfigJustMandatoryFields() rawWorkflowDefinition {
 
-	var flowit rawFlowitConfig
+	var config rawWorkflowDefinition
+	var flowit rawMainDefinition
+
+	config.Flowit = &flowit
 
 	version := "0.1"
-	flowit.Version = &version
 
 	var branch rawBranch
 	branchID := "master"
@@ -21,28 +23,30 @@ func validConfigJustMandatoryFields() rawFlowitConfig {
 		"id":      "start",
 		"actions": []interface{}{"action1", "action2"},
 	}
-	workflowType := rawWorkflowType{
+	workflowType := rawWorkflow{
 		"feature": []*rawStage{
 			&stage,
 		},
 	}
 
-	workflow := rawWorkflow{
+	mainConfig := rawMainDefinition{
+		Version: &version,
 		Branches: []*rawBranch{
 			&branch,
 		},
-		Stages: []*rawWorkflowType{
+		Workflows: []*rawWorkflow{
 			&workflowType,
 		},
 	}
-	flowit.Workflow = &workflow
 
-	return flowit
+	config.Flowit = &mainConfig
+
+	return config
 }
 
-func validConfigWithOptionalFields() FlowitConfig {
+func validConfigWithOptionalFields() WorkflowDefinition {
 
-	var flowit FlowitConfig
+	var flowit mainDefinition
 
 	flowit.Version = "0.1"
 	flowit.Config = config{
@@ -55,7 +59,7 @@ func validConfigWithOptionalFields() FlowitConfig {
 		"var2": 12345,
 		"var3": "${env-variable}",
 	}
-	flowit.Workflow.Branches = []branch{
+	flowit.Branches = []branch{
 		{
 			ID:        "master",
 			Name:      "master",
@@ -79,7 +83,7 @@ func validConfigWithOptionalFields() FlowitConfig {
 			},
 		},
 	}
-	flowit.Workflow.Tags = []tag{
+	flowit.Tags = []tag{
 		{
 			ID:     "release-tag",
 			Format: "release-[0-9]+",
@@ -93,7 +97,7 @@ func validConfigWithOptionalFields() FlowitConfig {
 			},
 		},
 	}
-	flowit.Workflow.Stages = []workflowType{
+	flowit.Workflows = []workflow{
 		{
 			"feature": []stage{
 				{
@@ -108,5 +112,8 @@ func validConfigWithOptionalFields() FlowitConfig {
 		},
 	}
 
-	return flowit
+	var config WorkflowDefinition
+	config.Flowit = flowit
+
+	return config
 }

@@ -12,18 +12,18 @@ var _ = Describe("Config", func() {
 
 		It("should return a nil error for missing optional values", func() {
 
-			rawFlowit := validConfigJustMandatoryFields()
-			err := validateConfig(&rawFlowit)
+			rawConfig := validConfigJustMandatoryFields()
+			err := validateConfig(&rawConfig)
 			Expect(err).To(BeNil())
 
 		})
 
 		It("should return a nil error for having all optional values", func() {
 
-			flowit := validConfigWithOptionalFields()
-			rawFlowit := rawify(&flowit)
+			config := validConfigWithOptionalFields()
+			rawConfig := rawify(&config)
 
-			err := validateConfig(rawFlowit)
+			err := validateConfig(rawConfig)
 			Expect(err).To(BeNil())
 
 		})
@@ -36,9 +36,9 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for incorrect version", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Version = ".1"
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Version = ".1"
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -52,9 +52,9 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for incorrect config", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Config.Shell = "/nonexistent/shell"
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Config.Shell = "/nonexistent/shell"
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -68,18 +68,18 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for invalid branch ID", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = "$<variable>"
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = "$<variable>"
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("ID:"))
 
-				flowit = validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = " "
-				rawFlowit = rawify(&flowit)
+				config = validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = " "
+				rawFlowit = rawify(&config)
 
 				err = validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -90,9 +90,9 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for invalid branch name", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].Name = " "
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[0].Name = " "
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -103,14 +103,14 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for a wrongly defined transition", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = "master"
-				flowit.Workflow.Branches[0].Eternal = true
-				flowit.Workflow.Branches[1].ID = "feature"
-				flowit.Workflow.Branches[1].Eternal = false
-				flowit.Workflow.Branches[1].Protected = false
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = "master"
+				config.Flowit.Branches[0].Eternal = true
+				config.Flowit.Branches[1].ID = "feature"
+				config.Flowit.Branches[1].Eternal = false
+				config.Flowit.Branches[1].Protected = false
 				// transitions should not be defined on an eternal branch
-				flowit.Workflow.Branches[0].Transitions = []transition{
+				config.Flowit.Branches[0].Transitions = []transition{
 					{
 						From: "feature",
 						To: []string{
@@ -118,7 +118,7 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -129,13 +129,13 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for an undefined transition", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[1].ID = "feature"
-				flowit.Workflow.Branches[1].Eternal = false
-				flowit.Workflow.Branches[1].Protected = false
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[1].ID = "feature"
+				config.Flowit.Branches[1].Eternal = false
+				config.Flowit.Branches[1].Protected = false
 				// transitions should be defined on a non eternal branch
-				flowit.Workflow.Branches[1].Transitions = []transition{}
-				rawFlowit := rawify(&flowit)
+				config.Flowit.Branches[1].Transitions = []transition{}
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -146,13 +146,13 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for an incorrect transition target", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = "master"
-				flowit.Workflow.Branches[0].Eternal = true
-				flowit.Workflow.Branches[0].Protected = true
-				flowit.Workflow.Branches[1].ID = "feature"
-				flowit.Workflow.Branches[1].Eternal = false
-				flowit.Workflow.Branches[1].Transitions = []transition{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = "master"
+				config.Flowit.Branches[0].Eternal = true
+				config.Flowit.Branches[0].Protected = true
+				config.Flowit.Branches[1].ID = "feature"
+				config.Flowit.Branches[1].Eternal = false
+				config.Flowit.Branches[1].Transitions = []transition{
 					{
 						From: "master",
 						To: []string{
@@ -161,7 +161,7 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -172,13 +172,13 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for an incorrect transition branch ID", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = "master"
-				flowit.Workflow.Branches[0].Eternal = true
-				flowit.Workflow.Branches[0].Protected = true
-				flowit.Workflow.Branches[1].ID = "feature"
-				flowit.Workflow.Branches[1].Eternal = false
-				flowit.Workflow.Branches[1].Transitions = []transition{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = "master"
+				config.Flowit.Branches[0].Eternal = true
+				config.Flowit.Branches[0].Protected = true
+				config.Flowit.Branches[1].ID = "feature"
+				config.Flowit.Branches[1].Eternal = false
+				config.Flowit.Branches[1].Transitions = []transition{
 					{
 						From: "invalid-branch-id",
 						To: []string{
@@ -186,20 +186,20 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
 
-				flowit = validConfigWithOptionalFields()
-				flowit.Workflow.Branches[0].ID = "master"
-				flowit.Workflow.Branches[0].Eternal = true
-				flowit.Workflow.Branches[0].Protected = true
-				flowit.Workflow.Branches[1].ID = "feature"
-				flowit.Workflow.Branches[1].Eternal = false
-				flowit.Workflow.Branches[1].Transitions = []transition{
+				config = validConfigWithOptionalFields()
+				config.Flowit.Branches[0].ID = "master"
+				config.Flowit.Branches[0].Eternal = true
+				config.Flowit.Branches[0].Protected = true
+				config.Flowit.Branches[1].ID = "feature"
+				config.Flowit.Branches[1].Eternal = false
+				config.Flowit.Branches[1].Transitions = []transition{
 					{
 						From: "master",
 						To: []string{
@@ -207,7 +207,7 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit = rawify(&flowit)
+				rawFlowit = rawify(&config)
 
 				err = validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -224,9 +224,9 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for an invalid tag ID", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Tags[0].ID = " "
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Tags[0].ID = " "
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -237,9 +237,9 @@ var _ = Describe("Config", func() {
 
 			It("should return a descriptive error for an invalid tag format", func() {
 
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Tags[0].Format = " "
-				rawFlowit := rawify(&flowit)
+				config := validConfigWithOptionalFields()
+				config.Flowit.Tags[0].Format = " "
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -251,16 +251,16 @@ var _ = Describe("Config", func() {
 			// TODO: Check for repeated tag workflows & stages & branches
 			It("should return a descriptive error for an invalid tag workflow", func() {
 
-				flowit := validConfigWithOptionalFields()
+				config := validConfigWithOptionalFields()
 				var existingStage string
-				for k := range flowit.Workflow.Stages[0] {
-					existingStage = flowit.Workflow.Stages[0][k][0]["id"].(string)
+				for k := range config.Flowit.Workflows[0] {
+					existingStage = config.Flowit.Workflows[0][k][0]["id"].(string)
 					break
 				}
-				flowit.Workflow.Tags[0].Stages["missing-workflow"] = []string{
+				config.Flowit.Tags[0].Stages["missing-workflow"] = []string{
 					existingStage,
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -269,8 +269,8 @@ var _ = Describe("Config", func() {
 			})
 
 			It("should return a descriptive error for an invalid stage on a valid workflow", func() {
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Stages[0]["my-workflow"] = []stage{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Workflows[0]["my-workflow"] = []stage{
 					{
 						"id":   "my-stage",
 						"args": "arg1 arg2",
@@ -282,10 +282,10 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				flowit.Workflow.Tags[0].Stages["my-workflow"] = []string{
+				config.Flowit.Tags[0].Stages["my-workflow"] = []string{
 					"non-existant-stage",
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -294,11 +294,11 @@ var _ = Describe("Config", func() {
 			})
 
 			It("should return a descriptive error for an invalid tag branch", func() {
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Tags[0].Branches = []string{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Tags[0].Branches = []string{
 					"non-existant-branch",
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -311,9 +311,9 @@ var _ = Describe("Config", func() {
 		Context("Validating stages", func() {
 
 			It("should return a descriptive error for a non existant stage ID", func() {
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Stages[0] = workflowType{
-					"workflow-type": []stage{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Workflows[0] = workflow{
+					"workflow": []stage{
 						{
 							"actions": []string{
 								"action1",
@@ -321,7 +321,7 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -330,15 +330,15 @@ var _ = Describe("Config", func() {
 			})
 
 			It("should return a descriptive error for a non existant stage actions", func() {
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Stages[0] = workflowType{
-					"workflow-type": []stage{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Workflows[0] = workflow{
+					"workflow": []stage{
 						{
 							"id": "my-id",
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -347,9 +347,9 @@ var _ = Describe("Config", func() {
 			})
 
 			It("should return a descriptive error for a non supported stage property", func() {
-				flowit := validConfigWithOptionalFields()
-				flowit.Workflow.Stages[0] = workflowType{
-					"workflow-type": []stage{
+				config := validConfigWithOptionalFields()
+				config.Flowit.Workflows[0] = workflow{
+					"workflow": []stage{
 						{
 							"id":   "my-id",
 							"args": "arg1 arg2",
@@ -363,7 +363,7 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&flowit)
+				rawFlowit := rawify(&config)
 
 				err := validateConfig(rawFlowit)
 				Expect(err).To(Not(BeNil()))
@@ -377,8 +377,8 @@ var _ = Describe("Config", func() {
 
 })
 
-func rawify(config *FlowitConfig) *rawFlowitConfig {
-	var rawConfig rawFlowitConfig
+func rawify(config *WorkflowDefinition) *rawWorkflowDefinition {
+	var rawConfig rawWorkflowDefinition
 	if err := utils.DeepCopy(config, &rawConfig); err != nil {
 		return nil
 	}

@@ -1,11 +1,17 @@
 package config
 
-// FlowitConfig is the consumer friendly data structure for reading the input configuration
-type FlowitConfig struct {
+// WorkflowDefinition is the consumer friendly data structure for reading the input configuration
+type WorkflowDefinition struct {
+	Flowit mainDefinition
+}
+
+type mainDefinition struct {
 	Version   string
 	Config    config
 	Variables variables
-	Workflow  workflow
+	Branches  []branch
+	Tags      []tag
+	Workflows []workflow
 }
 
 type config struct {
@@ -14,12 +20,6 @@ type config struct {
 	Shell               string
 }
 type variables map[string]interface{}
-
-type workflow struct {
-	Branches []branch
-	Tags     []tag
-	Stages   []workflowType
-}
 
 type branch struct {
 	ID          string
@@ -38,7 +38,7 @@ type tag struct {
 	Branches []string
 }
 
-type workflowType map[string][]stage
+type workflow map[string][]stage
 
 // TODO: Can this be map[string]string | map[string][]string?
 type stage map[string]interface{}

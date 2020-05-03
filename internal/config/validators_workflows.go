@@ -7,13 +7,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func stageMapValidator(workflowTypeMap interface{}) error {
-	switch workflowTypeMap := workflowTypeMap.(type) {
-	case rawWorkflowType:
-		for workflowType, stages := range workflowTypeMap {
-			if err := validator.Validate(workflowType,
+func workflowMapValidator(workflowMap interface{}) error {
+	switch workflowMap := workflowMap.(type) {
+	case rawWorkflow:
+		for workflow, stages := range workflowMap {
+			if err := validator.Validate(workflow,
 				validator.Required,
-				validator.By(workflowTypeValidator)); err != nil {
+				validator.By(workflowValidator)); err != nil {
 				return err
 			}
 			if err := validator.Validate(stages,
@@ -26,17 +26,17 @@ func stageMapValidator(workflowTypeMap interface{}) error {
 		}
 		return nil
 	default:
-		return errors.New("Invalid workflow.stages type. Got " + reflect.TypeOf(workflowTypeMap).Name())
+		return errors.New("Invalid workflow.workflows type. Got " + reflect.TypeOf(workflowMap).Name())
 	}
 }
 
 // POST MVP: We may need to validate our variable syntax
-func workflowTypeValidator(workflowType interface{}) error {
-	switch workflowType := workflowType.(type) {
+func workflowValidator(workflow interface{}) error {
+	switch workflow := workflow.(type) {
 	case string:
 		return nil
 	default:
-		return errors.New("Invalid workflow.stages workflow type. Got " + reflect.TypeOf(workflowType).Name())
+		return errors.New("Invalid workflow.workflows workflow type. Got " + reflect.TypeOf(workflow).Name())
 	}
 }
 

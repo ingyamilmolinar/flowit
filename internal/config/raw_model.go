@@ -1,12 +1,18 @@
 package config
 
-// rawFlowitConfig is the typed data structure for populating the input configuration
+// rawWorkflowDefinition is the typed data structure for populating the input configuration
 // pointers are used to be able to signal between unset values and zero values
-type rawFlowitConfig struct {
+type rawWorkflowDefinition struct {
+	Flowit *rawMainDefinition
+}
+
+type rawMainDefinition struct {
 	Version   *string
 	Config    *rawConfig
 	Variables *rawVariables
-	Workflow  *rawWorkflow
+	Branches  []*rawBranch
+	Tags      []*rawTag
+	Workflows []*rawWorkflow
 }
 
 type rawConfig struct {
@@ -16,12 +22,6 @@ type rawConfig struct {
 }
 
 type rawVariables map[string]interface{}
-
-type rawWorkflow struct {
-	Branches []*rawBranch
-	Tags     []*rawTag
-	Stages   []*rawWorkflowType
-}
 
 type rawBranch struct {
 	ID          *string
@@ -40,7 +40,7 @@ type rawTag struct {
 	Branches []*string
 }
 
-type rawWorkflowType map[string][]*rawStage
+type rawWorkflow map[string][]*rawStage
 
 // TODO: Can this be map[string]string | map[string][]string?
 type rawStage map[string]interface{}

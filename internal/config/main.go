@@ -6,7 +6,7 @@ import (
 )
 
 // ProcessFlowitConfig reads, parses the specified yaml configuration file and returns a map with the key/values
-func ProcessFlowitConfig(configName string, configLocation string) (*FlowitConfig, error) {
+func ProcessFlowitConfig(configName string, configLocation string) (*WorkflowDefinition, error) {
 
 	// TODO: Hash parsed and validated config and verify if it changed or not?
 	viper, err := readConfig(configName, configLocation)
@@ -25,7 +25,7 @@ func ProcessFlowitConfig(configName string, configLocation string) (*FlowitConfi
 	}
 
 	//TODO: Include defaults on rawConfig, use viper
-	var config FlowitConfig
+	var config WorkflowDefinition
 	if err := utils.DeepCopy(rawConfig, &config); err != nil {
 		return nil, errors.Wrap(err, "Config copying error")
 	}

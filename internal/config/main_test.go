@@ -18,12 +18,12 @@ var _ = Describe("Config", func() {
 				flowitptr, err := config.ProcessFlowitConfig("valid", "./testdata")
 				Expect(err).To(BeNil())
 				flowit := (*flowitptr)
-				Expect(flowit.Version).To(Equal("0.1"))
-				Expect(flowit.Config.Shell).To(Equal("/usr/bin/env bash"))
+				Expect(flowit.Flowit.Version).To(Equal("0.1"))
+				Expect(flowit.Flowit.Config.Shell).To(Equal("/usr/bin/env bash"))
 				/* #gomnd */
-				Expect(flowit.Variables["gerrit-port"]).To(Equal(float64(29418)))
-				Expect(flowit.Workflow.Branches[0].ID).To(Equal("master"))
-				Expect(flowit.Workflow.Stages[0]["development"][0]["actions"].([]interface{})[0].(string)).
+				Expect(flowit.Flowit.Variables["gerrit-port"]).To(Equal(float64(29418)))
+				Expect(flowit.Flowit.Branches[0].ID).To(Equal("master"))
+				Expect(flowit.Flowit.Workflows[0]["development"][0]["actions"].([]interface{})[0].(string)).
 					To(Equal("git checkout master"))
 			})
 

@@ -8,7 +8,7 @@ import (
 	validator "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func tagValidator(workflows []*rawWorkflowType, branches []*rawBranch) validator.RuleFunc {
+func tagValidator(workflows []*rawWorkflow, branches []*rawBranch) validator.RuleFunc {
 	return func(tag interface{}) error {
 		switch tag := tag.(type) {
 		case rawTag:
@@ -38,7 +38,7 @@ func tagFormatValidator(format interface{}) error {
 	)
 }
 
-func tagStagesValidator(workflows []*rawWorkflowType) validator.RuleFunc {
+func tagStagesValidator(workflows []*rawWorkflow) validator.RuleFunc {
 	return func(stageMap interface{}) error {
 		switch stageMap := stageMap.(type) {
 		case *map[string][]*string:

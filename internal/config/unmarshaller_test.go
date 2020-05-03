@@ -24,7 +24,7 @@ var _ = Describe("Config", func() {
 
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
-				Expect(*flowit.Version).To(Equal("0.1"))
+				Expect(*(*(*flowit).Flowit).Version).To(Equal("0.1"))
 			})
 
 			It("should set nil on missing sections", func() {
@@ -35,8 +35,8 @@ var _ = Describe("Config", func() {
 				}
 				flowit, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
-				Expect(flowit.Config).To(BeNil())
-				Expect(flowit.Variables).To(BeNil())
+				Expect((*(*flowit).Flowit).Config).To(BeNil())
+				Expect((*(*flowit).Flowit).Variables).To(BeNil())
 			})
 
 		})
@@ -53,7 +53,7 @@ var _ = Describe("Config", func() {
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))
-				Expect(errors.Cause(err).Error()).To(ContainSubstring("Workflow.Branches"))
+				Expect(errors.Cause(err).Error()).To(ContainSubstring("Branches"))
 				Expect(flowit).To(BeNil())
 			})
 
