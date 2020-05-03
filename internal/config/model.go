@@ -40,15 +40,12 @@ type tag struct {
 
 type workflow map[string][]stage
 
-type stage map[string]interface{}
-
-// TODO: Parse map into this struct
-/*type stage struct {
+type stage struct {
 	ID         string
 	Args       []string
 	Conditions []string
 	Actions    []string
-}*/
+}
 
 type transition struct {
 	From string

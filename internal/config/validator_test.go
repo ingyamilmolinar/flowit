@@ -38,9 +38,9 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Version = ".1"
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Version:"))
 
@@ -54,9 +54,9 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Config.Shell = "/nonexistent/shell"
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Config:"))
 
@@ -70,18 +70,18 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Branches[0].ID = "$<variable>"
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("ID:"))
 
 				config = validConfigWithOptionalFields()
 				config.Flowit.Branches[0].ID = " "
-				rawFlowit = rawify(&config)
+				rawConfig = rawify(&config)
 
-				err = validateConfig(rawFlowit)
+				err = validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("ID:"))
@@ -92,9 +92,9 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Branches[0].Name = " "
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Name:"))
@@ -118,9 +118,9 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
@@ -135,9 +135,9 @@ var _ = Describe("Config", func() {
 				config.Flowit.Branches[1].Protected = false
 				// transitions should be defined on a non eternal branch
 				config.Flowit.Branches[1].Transitions = []transition{}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
@@ -161,9 +161,9 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
@@ -186,9 +186,9 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
@@ -207,9 +207,9 @@ var _ = Describe("Config", func() {
 						},
 					},
 				}
-				rawFlowit = rawify(&config)
+				rawConfig = rawify(&config)
 
-				err = validateConfig(rawFlowit)
+				err = validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
@@ -226,9 +226,9 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Tags[0].ID = " "
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Tags:"))
 				Expect(err.Error()).To(ContainSubstring("ID:"))
@@ -239,9 +239,9 @@ var _ = Describe("Config", func() {
 
 				config := validConfigWithOptionalFields()
 				config.Flowit.Tags[0].Format = " "
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Tags:"))
 				Expect(err.Error()).To(ContainSubstring("Format:"))
@@ -254,15 +254,15 @@ var _ = Describe("Config", func() {
 				config := validConfigWithOptionalFields()
 				var existingStage string
 				for k := range config.Flowit.Workflows[0] {
-					existingStage = config.Flowit.Workflows[0][k][0]["id"].(string)
+					existingStage = config.Flowit.Workflows[0][k][0].ID
 					break
 				}
 				config.Flowit.Tags[0].Stages["missing-workflow"] = []string{
 					existingStage,
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Tags:"))
 				Expect(err.Error()).To(ContainSubstring("Stages:"))
@@ -272,22 +272,22 @@ var _ = Describe("Config", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.Workflows[0]["my-workflow"] = []stage{
 					{
-						"id":   "my-stage",
-						"args": "arg1 arg2",
-						"conditions": []string{
+						ID:   "my-stage",
+						Args: []string{"arg1", "arg2"},
+						Conditions: []string{
 							"condition-1",
 						},
-						"actions": []string{
+						Actions: []string{
 							"action-1",
 						},
 					},
 				}
 				config.Flowit.Tags[0].Stages["my-workflow"] = []string{
-					"non-existant-stage",
+					"non-existent-stage",
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Tags:"))
 				Expect(err.Error()).To(ContainSubstring("Stages:"))
@@ -296,11 +296,11 @@ var _ = Describe("Config", func() {
 			It("should return a descriptive error for an invalid tag branch", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.Tags[0].Branches = []string{
-					"non-existant-branch",
+					"non-existent-branch",
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("Tags:"))
 				Expect(err.Error()).To(ContainSubstring("Branches:"))
@@ -310,65 +310,48 @@ var _ = Describe("Config", func() {
 
 		Context("Validating stages", func() {
 
-			It("should return a descriptive error for a non existant stage ID", func() {
+			It("should return a descriptive error for a non existent stage ID", func() {
 				config := validConfigWithOptionalFields()
-				config.Flowit.Workflows[0] = workflow{
-					"workflow": []stage{
-						{
-							"actions": []string{
-								"action1",
+				firstWorkflow := config.Flowit.Workflows[0]
+				config.Flowit.Workflows = []workflow{
+					firstWorkflow,
+					{
+						"workflow": []stage{
+							{
+								Actions: []string{
+									"action1",
+								},
 							},
 						},
 					},
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
-				Expect(err.Error()).To(ContainSubstring("Stages:"))
-				Expect(err.Error()).To(ContainSubstring("id"))
+				Expect(err.Error()).To(ContainSubstring("Workflows:"))
+				Expect(err.Error()).To(ContainSubstring("cannot be blank"))
 			})
 
-			It("should return a descriptive error for a non existant stage actions", func() {
+			It("should return a descriptive error for a non existent stage actions", func() {
 				config := validConfigWithOptionalFields()
-				config.Flowit.Workflows[0] = workflow{
-					"workflow": []stage{
-						{
-							"id": "my-id",
+				firstWorkflow := config.Flowit.Workflows[0]
+				config.Flowit.Workflows = []workflow{
+					firstWorkflow,
+					{
+						"workflow": []stage{
+							{
+								ID: "my-id",
+							},
 						},
 					},
 				}
-				rawFlowit := rawify(&config)
+				rawConfig := rawify(&config)
 
-				err := validateConfig(rawFlowit)
+				err := validateConfig(rawConfig)
 				Expect(err).To(Not(BeNil()))
-				Expect(err.Error()).To(ContainSubstring("Stages:"))
-				Expect(err.Error()).To(ContainSubstring("actions"))
-			})
-
-			It("should return a descriptive error for a non supported stage property", func() {
-				config := validConfigWithOptionalFields()
-				config.Flowit.Workflows[0] = workflow{
-					"workflow": []stage{
-						{
-							"id":   "my-id",
-							"args": []string{"arg1", "arg2"},
-							"conditions": []string{
-								"condition1",
-							},
-							"actions": []string{
-								"action1",
-							},
-							"non-supported-property": "whatever",
-						},
-					},
-				}
-				rawFlowit := rawify(&config)
-
-				err := validateConfig(rawFlowit)
-				Expect(err).To(Not(BeNil()))
-				Expect(err.Error()).To(ContainSubstring("Stages:"))
-				Expect(err.Error()).To(ContainSubstring("non-supported-property"))
+				Expect(err.Error()).To(ContainSubstring("Workflows:"))
+				Expect(err.Error()).To(ContainSubstring("cannot be blank"))
 			})
 
 		})

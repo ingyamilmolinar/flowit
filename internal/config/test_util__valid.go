@@ -19,9 +19,12 @@ func validConfigJustMandatoryFields() rawWorkflowDefinition {
 	branch.Eternal = &branchEternal
 	branch.Protected = &branchProtected
 
+	stageID := "start"
+	stageAction1 := "action1"
+	stageAction2 := "action2"
 	stage := rawStage{
-		"id":      "start",
-		"actions": []interface{}{"action1", "action2"},
+		ID:      &stageID,
+		Actions: []*string{&stageAction1, &stageAction2},
 	}
 	workflowType := rawWorkflow{
 		"feature": []*rawStage{
@@ -101,12 +104,12 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 		{
 			"feature": []stage{
 				{
-					"id":   "start",
-					"args": []string{"arg1", "arg2"},
-					"conditions": []string{
+					ID:   "start",
+					Args: []string{"arg1", "arg2"},
+					Conditions: []string{
 						"condition1",
 					},
-					"actions": []string{"action1", "action2"},
+					Actions: []string{"action1", "action2"},
 				},
 			},
 		},

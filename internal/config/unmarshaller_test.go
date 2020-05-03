@@ -22,9 +22,9 @@ var _ = Describe("Config", func() {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
 
-				flowit, err := unmarshallConfig(viper)
+				definition, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
-				Expect(*(*(*flowit).Flowit).Version).To(Equal("0.1"))
+				Expect(*definition.Flowit.Version).To(Equal("0.1"))
 			})
 
 			It("should set nil on missing sections", func() {
@@ -33,10 +33,10 @@ var _ = Describe("Config", func() {
 				if err := viper.ReadInConfig(); err != nil {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
-				flowit, err := unmarshallConfig(viper)
+				definition, err := unmarshallConfig(viper)
 				Expect(err).To(BeNil())
-				Expect((*(*flowit).Flowit).Config).To(BeNil())
-				Expect((*(*flowit).Flowit).Variables).To(BeNil())
+				Expect(definition.Flowit.Config).To(BeNil())
+				Expect(definition.Flowit.Variables).To(BeNil())
 			})
 
 		})
@@ -49,12 +49,12 @@ var _ = Describe("Config", func() {
 				if err := viper.ReadInConfig(); err != nil {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
-				flowit, err := unmarshallConfig(viper)
+				definition, err := unmarshallConfig(viper)
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Branches"))
-				Expect(flowit).To(BeNil())
+				Expect(definition).To(BeNil())
 			})
 
 		})

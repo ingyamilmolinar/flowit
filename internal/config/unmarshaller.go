@@ -9,7 +9,7 @@ import (
 // ValidateViperConfig takes a viper configuration and validates it section by section
 func unmarshallConfig(v *viper.Viper) (*rawWorkflowDefinition, error) {
 
-	var flowit rawWorkflowDefinition
+	var workflowDefinition rawWorkflowDefinition
 
 	config := func(c *mapstructure.DecoderConfig) {
 		c.ErrorUnused = true
@@ -17,9 +17,9 @@ func unmarshallConfig(v *viper.Viper) (*rawWorkflowDefinition, error) {
 		c.ZeroFields = true
 	}
 
-	if err := (*v).UnmarshalExact(&flowit, config); err != nil {
+	if err := (*v).UnmarshalExact(&workflowDefinition, config); err != nil {
 		return nil, errors.Wrap(err, "Validation error")
 	}
 
-	return &flowit, nil
+	return &workflowDefinition, nil
 }

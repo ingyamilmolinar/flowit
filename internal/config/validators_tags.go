@@ -78,10 +78,9 @@ func areStagesDefined(stages []*string, definedStages []*rawStage) bool {
 			if stage == nil {
 				return false
 			}
-			if stageID, ok := (*definedStage)["id"]; ok {
-				if *stage == stageID {
-					foundStage++
-				}
+			stageID := (*definedStage.ID)
+			if *stage == stageID {
+				foundStage++
 			}
 		}
 	}
