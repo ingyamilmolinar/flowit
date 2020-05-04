@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -13,7 +12,6 @@ import (
 func DeepCopy(from interface{}, to interface{}) error {
 	bytes, err := json.Marshal(from)
 	if err != nil {
-		fmt.Println(err.Error())
 		return errors.Wrap(err, "Deep copy error while marshalling")
 	}
 	if err := json.Unmarshal(bytes, to); err != nil {

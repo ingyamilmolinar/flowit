@@ -6,26 +6,26 @@ import (
 )
 
 // ValidateConfig takes a raw configuration and validates it section by section
-func validateConfig(workflowDefinition *rawWorkflowDefinition) error {
+func validateWorkflowDefinition(workflowDefinition *rawWorkflowDefinition) error {
 	if workflowDefinition.Flowit == nil {
-		return errors.New("Configuration must have a 'flowit' key")
+		return errors.New("Workflow definition must contain a main 'flowit' key")
 	}
-	return validator.ValidateStruct(workflowDefinition.Flowit, configFieldRules(workflowDefinition.Flowit)...)
+	return validator.ValidateStruct(workflowDefinition.Flowit, mainDefinitionFieldRules(workflowDefinition.Flowit)...)
 }
 
-func configFieldRules(config *rawMainDefinition) []*validator.FieldRules {
+func mainDefinitionFieldRules(mainDefinition *rawMainDefinition) []*validator.FieldRules {
 	return []*validator.FieldRules{
-		validator.Field(&config.Version, validator.Required, validator.By(versionValidator)),
-		validator.Field(&config.Config, validator.By(configValidator)),
-		validator.Field(&config.Variables, validator.By(variablesValidator)),
-		validator.Field(&config.Branches,
+		validator.Field(&mainDefinition.Version, validator.Required, validator.By(versionValidator)),
+		validator.Field(&mainDefinition.Config, validator.By(configValidator)),
+		validator.Field(&mainDefinition.Variables, validator.By(variablesValidator)),
+		validator.Field(&mainDefinition.Branches,
 			validator.Required,
-			validator.Each(validator.Required, validator.By(branchValidator(config.Branches))),
+			validator.Each(validator.Required, validator.By(branchValidator(mainDefinition.Branches))),
 		),
-		validator.Field(&config.Tags,
-			validator.Each(validator.By(tagValidator(config.Workflows, config.Branches))),
+		validator.Field(&mainDefinition.Tags,
+			validator.Each(validator.By(tagValidator(mainDefinition.Workflows, mainDefinition.Branches))),
 		),
-		validator.Field(&config.Workflows,
+		validator.Field(&mainDefinition.Workflows,
 			validator.Required,
 			validator.Each(validator.Required, validator.By(workflowMapValidator)),
 		),

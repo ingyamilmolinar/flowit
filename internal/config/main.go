@@ -5,29 +5,31 @@ import (
 	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
-// ProcessFlowitConfig reads, parses the specified yaml configuration file and returns a map with the key/values
-func ProcessFlowitConfig(configName string, configLocation string) (*WorkflowDefinition, error) {
+// ProcessWorkflowDefinition reads, parses the specified yaml configuration file and returns a map with the key/values
+func ProcessWorkflowDefinition(fileName string, fileLocation string) (*WorkflowDefinition, error) {
 
 	// TODO: Hash parsed and validated config and verify if it changed or not?
-	viper, err := readConfig(configName, configLocation)
+	viper, err := readWorkflowDefinition(fileName, fileLocation)
 	if err != nil {
-		return nil, errors.Wrap(err, "Config reading error")
+		return nil, errors.WithStack(err)
 	}
 
 	// TODO: Viper is allowing repeated keys...
-	rawConfig, err := unmarshallConfig(viper)
+	rawWorkflowDefinition, err := unmarshallWorkflowDefinition(viper)
 	if err != nil {
-		return nil, errors.Wrap(err, "Config unmarshalling error")
+		return nil, errors.WithStack(err)
 	}
 
-	if err = validateConfig(rawConfig); err != nil {
-		return nil, errors.Wrap(err, "Config validation error")
+	if err = validateWorkflowDefinition(rawWorkflowDefinition); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	//TODO: Include defaults on rawConfig, use viper
-	var config WorkflowDefinition
-	if err := utils.DeepCopy(rawConfig, &config); err != nil {
-		return nil, errors.Wrap(err, "Config copying error")
+	// Since viper does not allow for array defaults, we roll our own mechanism
+	setDefaults(rawWorkflowDefinition)
+
+	var workflowDefinition WorkflowDefinition
+	if err := utils.DeepCopy(rawWorkflowDefinition, &workflowDefinition); err != nil {
+		return nil, errors.WithStack(err)
 	}
-	return &config, nil
+	return &workflowDefinition, nil
 }

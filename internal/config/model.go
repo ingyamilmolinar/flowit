@@ -34,9 +34,11 @@ type branch struct {
 type tag struct {
 	ID       string
 	Format   string
-	Stages   map[string][]string
+	Stages   stages
 	Branches []string
 }
+
+type stages map[string][]string
 
 type workflow map[string][]stage
 

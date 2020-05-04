@@ -22,7 +22,7 @@ var _ = Describe("Config", func() {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
 
-				definition, err := unmarshallConfig(viper)
+				definition, err := unmarshallWorkflowDefinition(viper)
 				Expect(err).To(BeNil())
 				Expect(*definition.Flowit.Version).To(Equal("0.1"))
 			})
@@ -33,7 +33,7 @@ var _ = Describe("Config", func() {
 				if err := viper.ReadInConfig(); err != nil {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
-				definition, err := unmarshallConfig(viper)
+				definition, err := unmarshallWorkflowDefinition(viper)
 				Expect(err).To(BeNil())
 				Expect(definition.Flowit.Config).To(BeNil())
 				Expect(definition.Flowit.Variables).To(BeNil())
@@ -49,7 +49,7 @@ var _ = Describe("Config", func() {
 				if err := viper.ReadInConfig(); err != nil {
 					Fail(fmt.Sprintf("Error reading config %+v", err))
 				}
-				definition, err := unmarshallConfig(viper)
+				definition, err := unmarshallWorkflowDefinition(viper)
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))

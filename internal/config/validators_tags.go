@@ -13,8 +13,8 @@ func tagValidator(workflows []*rawWorkflow, branches []*rawBranch) validator.Rul
 		switch tag := tag.(type) {
 		case rawTag:
 			return validator.ValidateStruct(&tag,
-				validator.Field(&tag.ID, validator.By(tagIDValidator)),
-				validator.Field(&tag.Format, validator.By(tagFormatValidator)),
+				validator.Field(&tag.ID, validator.Required, validator.By(tagIDValidator)),
+				validator.Field(&tag.Format, validator.Required, validator.By(tagFormatValidator)),
 				validator.Field(&tag.Stages, validator.By(tagStagesValidator(workflows))),
 				validator.Field(&tag.Branches, validator.Each(validator.By(tagBranchesValidator(branches)))),
 			)
@@ -26,7 +26,6 @@ func tagValidator(workflows []*rawWorkflow, branches []*rawBranch) validator.Rul
 
 func tagIDValidator(id interface{}) error {
 	return validator.Validate(id,
-		validator.Required,
 		validator.By(validIdentifier),
 	)
 }
@@ -41,7 +40,8 @@ func tagFormatValidator(format interface{}) error {
 func tagStagesValidator(workflows []*rawWorkflow) validator.RuleFunc {
 	return func(stageMap interface{}) error {
 		switch stageMap := stageMap.(type) {
-		case *map[string][]*string:
+		case *rawStages:
+			// Tag stages can be optional
 			if stageMap == nil {
 				return nil
 			}

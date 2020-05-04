@@ -7,13 +7,13 @@ import (
 
 const configType = "yaml"
 
-func readConfig(configName string, configLocation string) (*viper.Viper, error) {
+func readWorkflowDefinition(fileName string, fileLocation string) (*viper.Viper, error) {
 	viper := viper.New()
 	viper.SetConfigType(configType)
-	viper.SetConfigName(configName)
-	viper.AddConfigPath(configLocation)
+	viper.SetConfigName(fileName)
+	viper.AddConfigPath(fileLocation)
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, errors.Wrap(err, "Config reading error")
+		return nil, errors.Wrap(err, "Workflow definition read error")
 	}
 	return viper, nil
 }

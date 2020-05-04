@@ -7,7 +7,7 @@ import (
 )
 
 // ValidateViperConfig takes a viper configuration and validates it section by section
-func unmarshallConfig(v *viper.Viper) (*rawWorkflowDefinition, error) {
+func unmarshallWorkflowDefinition(v *viper.Viper) (*rawWorkflowDefinition, error) {
 
 	var workflowDefinition rawWorkflowDefinition
 
@@ -18,7 +18,7 @@ func unmarshallConfig(v *viper.Viper) (*rawWorkflowDefinition, error) {
 	}
 
 	if err := (*v).UnmarshalExact(&workflowDefinition, config); err != nil {
-		return nil, errors.Wrap(err, "Validation error")
+		return nil, errors.Wrap(err, "Workflow definition unmarshalling error")
 	}
 
 	return &workflowDefinition, nil

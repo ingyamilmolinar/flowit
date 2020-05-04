@@ -12,7 +12,7 @@ func main() {
 	const configFile = "git-flow"
 	const samplesDir = "samples"
 
-	_, err := config.ProcessFlowitConfig(configFile, utils.GetProjectRootDir()+"/"+samplesDir)
+	_, err := config.ProcessWorkflowDefinition(configFile, utils.GetProjectRootDir()+"/"+samplesDir)
 	utils.OptionalExit(err)
 	err = commands.RegisterCommands(mainCommand)
 	utils.OptionalExit(err)

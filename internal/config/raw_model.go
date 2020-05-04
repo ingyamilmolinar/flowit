@@ -36,9 +36,11 @@ type rawBranch struct {
 type rawTag struct {
 	ID       *string
 	Format   *string
-	Stages   *map[string][]*string
+	Stages   *rawStages
 	Branches []*string
 }
+
+type rawStages map[string][]*string
 
 type rawWorkflow map[string][]*rawStage
 

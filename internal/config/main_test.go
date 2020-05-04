@@ -15,7 +15,7 @@ var _ = Describe("Config", func() {
 		Context("Processing a valid configuration", func() {
 
 			It("should return a populated Flowit structure", func() {
-				workflowDefinitionPtr, err := config.ProcessFlowitConfig("valid", "./testdata")
+				workflowDefinitionPtr, err := config.ProcessWorkflowDefinition("valid", "./testdata")
 				Expect(err).To(BeNil())
 				workflowDefinition := (*workflowDefinitionPtr)
 				Expect(workflowDefinition.Flowit.Version).To(Equal("0.1"))
@@ -32,7 +32,7 @@ var _ = Describe("Config", func() {
 		Context("Processing an invalid configuration", func() {
 
 			It("should return a descriptive error", func() {
-				workflowDefinition, err := config.ProcessFlowitConfig("incorrect-types", "./testdata")
+				workflowDefinition, err := config.ProcessWorkflowDefinition("incorrect-types", "./testdata")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(MatchRegexp("[0-9]+ error\\(s\\) decoding:"))
 				Expect(workflowDefinition).To((BeNil()))

@@ -16,7 +16,7 @@ var _ = Describe("Config", func() {
 		Context("Reading a valid configuration", func() {
 
 			It("should return a populated viper struct", func() {
-				viper, err := readConfig("valid", "./testdata")
+				viper, err := readWorkflowDefinition("valid", "./testdata")
 				Expect(err).To(BeNil())
 				Expect((*viper).GetString("flowit.version")).To(Equal("0.1"))
 			})
@@ -26,7 +26,7 @@ var _ = Describe("Config", func() {
 		Context("Reading an invalid configuration", func() {
 
 			It("should return an informative error", func() {
-				viper, err := readConfig("incorrect-format", "./testdata")
+				viper, err := readWorkflowDefinition("incorrect-format", "./testdata")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(MatchRegexp("While parsing config: yaml: line [0-9]+"))
 				Expect(viper).To(BeNil())
@@ -37,7 +37,7 @@ var _ = Describe("Config", func() {
 		Context("Reading a non existent configuration", func() {
 
 			It("should return an informative error", func() {
-				viper, err := readConfig("non-existent", "./testdata")
+				viper, err := readWorkflowDefinition("non-existent", "./testdata")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Not Found"))
 				Expect(viper).To(BeNil())
@@ -58,7 +58,7 @@ var _ = Describe("Config", func() {
 						Fail(fmt.Sprintf("Error restoring test file: "+fileName+" permissions: %+v", err))
 					}
 				}()
-				viper, err := readConfig("valid", "./testdata")
+				viper, err := readWorkflowDefinition("valid", "./testdata")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("permission denied"))
 				Expect(viper).To(BeNil())
