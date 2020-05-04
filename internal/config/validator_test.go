@@ -313,18 +313,13 @@ var _ = Describe("Config", func() {
 			It("should return a descriptive error for a non existent stage ID", func() {
 				config := validConfigWithOptionalFields()
 				firstWorkflow := config.Flowit.Workflows[0]
-				config.Flowit.Workflows = []workflow{
-					firstWorkflow,
-					{
-						"workflow": []stage{
-							{
-								Actions: []string{
-									"action1",
-								},
-							},
-						},
+				firstWorkflow["feature"] = append(firstWorkflow["feature"], stage{
+					Actions: []string{
+						"action1",
+						"action2",
 					},
-				}
+				})
+				config.Flowit.Workflows[0] = firstWorkflow
 				rawConfig := rawify(&config)
 
 				err := validateConfig(rawConfig)
@@ -336,16 +331,10 @@ var _ = Describe("Config", func() {
 			It("should return a descriptive error for a non existent stage actions", func() {
 				config := validConfigWithOptionalFields()
 				firstWorkflow := config.Flowit.Workflows[0]
-				config.Flowit.Workflows = []workflow{
-					firstWorkflow,
-					{
-						"workflow": []stage{
-							{
-								ID: "my-id",
-							},
-						},
-					},
-				}
+				firstWorkflow["feature"] = append(firstWorkflow["feature"], stage{
+					ID: "my-id",
+				})
+				config.Flowit.Workflows[0] = firstWorkflow
 				rawConfig := rawify(&config)
 
 				err := validateConfig(rawConfig)

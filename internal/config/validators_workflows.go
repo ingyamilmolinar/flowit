@@ -18,11 +18,13 @@ func workflowMapValidator(workflowMap interface{}) error {
 			}
 			if err := validator.Validate(stages,
 				validator.Required,
+				validator.By(stagesValidator),
 				validator.Each(
 					validator.Required,
 					validator.By(stageValidator))); err != nil {
 				return err
 			}
+
 		}
 		return nil
 	default:
@@ -38,6 +40,27 @@ func workflowValidator(workflow interface{}) error {
 	default:
 		return errors.New("Invalid workflows workflow type. Got " + reflect.TypeOf(workflow).Name())
 	}
+}
+
+func stagesValidator(stages interface{}) error {
+	switch stages := stages.(type) {
+	case []*rawStage:
+		var foundStart, foundFinish bool
+		for _, stage := range stages {
+			if *stage.ID == "start" {
+				foundStart = true
+			}
+			if *stage.ID == "finish" {
+				foundFinish = true
+			}
+		}
+		if !foundStart || !foundFinish {
+			return errors.New("Invalid workflow stages: 'start' and 'finish' stages are required")
+		}
+	default:
+		return errors.New("Invalid workflow stages type. Got " + reflect.TypeOf(stages).Name())
+	}
+	return nil
 }
 
 func stageValidator(stage interface{}) error {
@@ -56,7 +79,7 @@ func stageValidator(stage interface{}) error {
 			return err
 		}
 	default:
-		return errors.New("Invalid workflow stages type. Got " + reflect.TypeOf(stage).Name())
+		return errors.New("Invalid workflow stage type. Got " + reflect.TypeOf(stage).Name())
 	}
 	return nil
 }

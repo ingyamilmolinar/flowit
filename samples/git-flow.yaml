@@ -79,9 +79,9 @@ flowit:
     branches: [ release ]
 
   workflows:
-  # Post MVP: - < current-branch-type | feature,bugfix >:
+  # POST MVP: - < current-branch-type | feature,bugfix >:
   - feature:
-    # TODO: Define FSM state transitions on each "workflow"
+    # POST MVP: Define FSM state transitions on each "workflow"
     - id: start
       args:
       # POST MVP: - < feature-branch-suffix:bugfix-branch-suffix | Branch name without prefix >
@@ -135,7 +135,7 @@ flowit:
       args:
       - < bugfix-branch-suffix | Branch name without prefix >
       - < jira-issue-id | Related Jira Issue ID >
-       # POST MVP: - "[ base-branch-name=develop | Base branch name | develop,release ]"
+      # POST MVP: - "[ base-branch-name=develop | Base branch name | develop,release ]"
       conditions:
       - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
       actions:

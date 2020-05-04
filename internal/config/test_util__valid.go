@@ -19,16 +19,24 @@ func validConfigJustMandatoryFields() rawWorkflowDefinition {
 	branch.Eternal = &branchEternal
 	branch.Protected = &branchProtected
 
-	stageID := "start"
-	stageAction1 := "action1"
-	stageAction2 := "action2"
-	stage := rawStage{
-		ID:      &stageID,
-		Actions: []*string{&stageAction1, &stageAction2},
+	startStageID := "start"
+	startStageAction1 := "start action1"
+	startStageAction2 := "start action2"
+	startStage := rawStage{
+		ID:      &startStageID,
+		Actions: []*string{&startStageAction1, &startStageAction2},
+	}
+	finishStageID := "finish"
+	finishStageAction1 := "finish action1"
+	finishStageAction2 := "finish action2"
+	finishStage := rawStage{
+		ID:      &finishStageID,
+		Actions: []*string{&finishStageAction1, &finishStageAction2},
 	}
 	workflowType := rawWorkflow{
 		"feature": []*rawStage{
-			&stage,
+			&startStage,
+			&finishStage,
 		},
 	}
 
@@ -105,11 +113,19 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 			"feature": []stage{
 				{
 					ID:   "start",
-					Args: []string{"arg1", "arg2"},
+					Args: []string{"start arg1", "start arg2"},
 					Conditions: []string{
-						"condition1",
+						"start condition1",
 					},
-					Actions: []string{"action1", "action2"},
+					Actions: []string{"start action1", "start action2"},
+				},
+				{
+					ID:   "finish",
+					Args: []string{"finish arg1", "finish arg2"},
+					Conditions: []string{
+						"finish condition1",
+					},
+					Actions: []string{"finish action1", "finish action2"},
 				},
 			},
 		},
