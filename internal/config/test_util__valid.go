@@ -113,7 +113,7 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 			"feature": []stage{
 				{
 					ID:   "start",
-					Args: []string{"start arg1", "start arg2"},
+					Args: []string{"< my-var-1 | My-desc-1 >", "< my-var-2 | My-desc-2 >"},
 					Conditions: []string{
 						"start condition1",
 					},
@@ -121,7 +121,7 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 				},
 				{
 					ID:   "finish",
-					Args: []string{"finish arg1", "finish arg2"},
+					Args: []string{"< my-var-1 | My-desc-1 >", "< my-var-2 | My-desc-2 >"},
 					Conditions: []string{
 						"finish condition1",
 					},

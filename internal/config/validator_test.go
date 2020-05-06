@@ -328,6 +328,28 @@ var _ = Describe("Config", func() {
 				Expect(err.Error()).To(ContainSubstring("cannot be blank"))
 			})
 
+			It("should return a descriptive error for an invalid stage arg", func() {
+				config := validConfigWithOptionalFields()
+				firstWorkflow := config.Flowit.Workflows[0]
+				firstWorkflow["feature"] = append(firstWorkflow["feature"], stage{
+					ID: "start",
+					Args: []string{
+						"< my-var-without-description >",
+					},
+					Actions: []string{
+						"action1",
+						"action2",
+					},
+				})
+				config.Flowit.Workflows[0] = firstWorkflow
+				rawConfig := rawify(&config)
+
+				err := validateWorkflowDefinition(rawConfig)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("Workflows:"))
+				Expect(err.Error()).To(ContainSubstring("arg"))
+			})
+
 			It("should return a descriptive error for a non existent stage actions", func() {
 				config := validConfigWithOptionalFields()
 				firstWorkflow := config.Flowit.Workflows[0]

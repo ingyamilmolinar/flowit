@@ -9,7 +9,7 @@
 		"type": "go",
 		"request": "launch",
 		"mode": "test",
-		"program": "${workspaceFolder}/internal/config/defaults_test.go",
+		"program": "${workspaceFolder}/internal/utils/parsers_test.go",
 	},
 		{
 			"name": "Launch",
@@ -18,7 +18,7 @@
 			"mode": "auto",
 			"program": "${workspaceFolder}/cmd/flowit.go",
 			"env": {},
-			"args": ["feature", "start", "arg1", "arg2"]
+			"args": ["feature", "start", "arg1"]
 		}
 	]
 }

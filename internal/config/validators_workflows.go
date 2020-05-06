@@ -5,6 +5,7 @@ import (
 
 	validator "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
 func workflowMapValidator(workflowMap interface{}) error {
@@ -90,10 +91,14 @@ func stageIDValidator(id interface{}) error {
 		validator.By(validIdentifier))
 }
 
-// TODO: We may need to validate our variable syntax
 func stageArgsValidator(args interface{}) error {
 	switch args := args.(type) {
 	case []*string:
+		for _, arg := range args {
+			if !utils.IsValidVariableDeclaration(*arg) {
+				return errors.New("Invalid workflow stage arg: " + (*arg))
+			}
+		}
 		return nil
 	default:
 		return errors.New("Invalid workflow stages args type. Got " + reflect.TypeOf(args).Name())
