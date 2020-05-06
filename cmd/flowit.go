@@ -8,12 +8,11 @@ import (
 
 func main() {
 
-	const mainCommand = "flowit"
 	const configFile = "git-flow"
 	const samplesDir = "samples"
 
-	_, err := config.ProcessWorkflowDefinition(configFile, utils.GetProjectRootDir()+"/"+samplesDir)
+	workflowDefinition, err := config.ProcessWorkflowDefinition(configFile, utils.GetProjectRootDir()+"/"+samplesDir)
 	utils.OptionalExit(err)
-	err = commands.RegisterCommands(mainCommand)
+	err = commands.RegisterCommands(workflowDefinition)
 	utils.OptionalExit(err)
 }

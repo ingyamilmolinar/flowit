@@ -18,7 +18,7 @@
 			"mode": "auto",
 			"program": "${workspaceFolder}/cmd/flowit.go",
 			"env": {},
-			"args": []
+			"args": ["feature", "start", "arg1", "arg2"]
 		}
 	]
 }
