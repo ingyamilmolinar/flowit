@@ -1,0 +1,27 @@
+version: 0.2
+
+env:
+  exported-variables:
+    - ARTIFACT_NAME
+phases:
+  install:
+    runtime-versions:
+      golang: latest
+  pre_build:
+    commands:
+      - go install ./...
+  build:
+    commands:
+      - ./scripts/pre-commit
+      - go build cmd/flowit.go
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo SOFTWARE_VERSION $(cat cmd/version)
+      - echo CODEBUILD_RESOLVED_SOURCE_VERSION $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - export ARTIFACT_NAME="$(cat cmd/version)--$(date +%Y-%m-%d)--$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo ARTIFACT_NAME $ARTIFACT_NAME
+artifacts:
+  files:
+    - flowit
+  name: $ARTIFACT_NAME

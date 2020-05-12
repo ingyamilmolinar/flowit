@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+go fmt github.com/yamil-rivera/flowit/...
+go vet github.com/yamil-rivera/flowit/...
+golint ./...
+golangci-lint run -E depguard \
+									-E dogsled \
+									-E dupl \
+									-E funlen \
+									-E gochecknoglobals \
+									-E goconst \
+									-E gocritic \
+									-E gofmt \
+									-E goimports \
+									-E gomnd \
+									-E gosec \
+									-E interfacer \
+									-E lll \
+									-E maligned \
+									-E misspell \
+									-E prealloc \
+									-E rowserrcheck \
+									-E scopelint \
+									-E stylecheck \
+									-E unconvert \
+									-E unparam
+go test github.com/yamil-rivera/flowit/...
