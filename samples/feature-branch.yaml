@@ -1,42 +1,50 @@
 flowit:
   version: "0.1"
+
   config:
-    abort-on-failed-action: true # On this case, we need to track every action so we can resume an interrupted stage
-    strict: false # Strict mode will prevent creating other types of workflow elements. This will make git unusable for mutation of refs
+    abort-on-failed-action: true
+    strict: false
     shell: /usr/bin/env bash
+
   variables:
     circleci-username: ${CIRCLECI_USERNAME}
     circleci-project-name: ${CIRCLECI_PROJECT_NAME}
     circleci-token: ${CIRCLECI_TOKEN}
+
   branches:
   - id: master
     name: master
-    # TODO: There's no pre-checkout hook so we need to think of an alternative. Aliasing / overriding git checkout?
-    eternal: true # You cannot delete it or create it. We will create this branch at setup if it does not exist.
-    protected: true # You cannot commit directly to it
+    eternal: true 
+    protected: true
 
   - id: feature
     name: $<prefix>$<suffix>
     prefix: feature/$<jira-issue-id>/
     suffix: $<feature-branch-suffix>
-    eternal: false # You must create it and can delete it
-    protected: false # You can commit directly to it
+    eternal: false
+    protected: false
     transitions:
-      # We can throw an error when a feature branch is created from a branch /= master
     - from: master
-      # We can throw an error when a branch is merged to a branch /= master
-      # We can throw an error when a branch is merged locally
       to: [ master:local ]
 
-  # This means that we cannot create tags on another branch that is not master
-  # And they should have a valid format
   tags:
   - id: release
     format: "[0-9]+\\.[0-9]+"
     branches: [ master ]
 
+  state-machines:
+    - id: simple-machine
+      stages: [ start, refresh, publish, finish ]
+      initial-stage: start
+      final-stages: [ finish ]
+      transitions:
+      - from: [ "!finish" ]
+        to: [ "!start" ]
+
   workflows:
-  - feature:
+  - id: feature
+    state-machine: simple-machine
+    stages:
     - id: start
       args:
       - < feature-branch-suffix | Branch name without prefix >

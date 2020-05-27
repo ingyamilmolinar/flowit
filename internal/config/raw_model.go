@@ -1,18 +1,19 @@
 package config
 
-// rawWorkflowDefinition is the typed data structure for populating the input configuration
-// pointers are used to be able to signal between unset values and zero values
+// rawWorkflowDefinition is the typed data structure used for populating and validating the workflow configuration
+// Pointers are used extensibly to be able to differentiate between unset values and default zero values
 type rawWorkflowDefinition struct {
 	Flowit *rawMainDefinition
 }
 
 type rawMainDefinition struct {
-	Version   *string
-	Config    *rawConfig
-	Variables *rawVariables
-	Branches  []*rawBranch
-	Tags      []*rawTag
-	Workflows []*rawWorkflow
+	Version       *string
+	Config        *rawConfig
+	Variables     *rawVariables
+	Branches      []*rawBranch
+	Tags          []*rawTag
+	StateMachines []*rawStateMachine `mapstructure:"state-machines"`
+	Workflows     []*rawWorkflow
 }
 
 type rawConfig struct {
@@ -40,9 +41,26 @@ type rawTag struct {
 	Branches []*string
 }
 
+type rawStateMachine struct {
+	ID           *string
+	Stages       []*string
+	InitialStage *string   `mapstructure:"initial-stage"`
+	FinalStages  []*string `mapstructure:"final-stages"`
+	Transitions  []*rawStateMachineTransition
+}
+
+type rawStateMachineTransition struct {
+	From []*string
+	To   []*string
+}
+
 type rawStages map[string][]*string
 
-type rawWorkflow map[string][]*rawStage
+type rawWorkflow struct {
+	ID           *string
+	StateMachine *string `mapstructure:"state-machine"`
+	Stages       []*rawStage
+}
 
 type rawStage struct {
 	ID         *string

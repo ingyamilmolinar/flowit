@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO: Change to NewStringRule!
 func versionValidator(version interface{}) error {
 	switch version := version.(type) {
 	case *string:

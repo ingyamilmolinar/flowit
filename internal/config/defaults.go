@@ -37,13 +37,12 @@ func setDefaults(workflowDefinition *rawWorkflowDefinition) {
 		// Defaults to all stages
 		allStages := make(rawStages)
 		for _, workflow := range workflowDefinition.Flowit.Workflows {
-			for workflowID, stages := range *workflow {
-				stagesIDs := make([]*string, len(stages))
-				for i, stage := range stages {
-					stagesIDs[i] = stage.ID
-				}
-				allStages[workflowID] = stagesIDs
+			workflowID := workflow.ID
+			stagesIDs := make([]*string, len(workflow.Stages))
+			for i, stage := range workflow.Stages {
+				stagesIDs[i] = stage.ID
 			}
+			allStages[*workflowID] = stagesIDs
 		}
 		return allStages
 	}()

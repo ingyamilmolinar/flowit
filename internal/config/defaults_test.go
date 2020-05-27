@@ -58,15 +58,19 @@ var _ = Describe("Config", func() {
 			stage2 := rawStage{
 				ID: &stage2ID,
 			}
+			workflowID1 := "workflow1"
+			workflowID2 := "workflow2"
 			workflows := []*rawWorkflow{
 				{
-					"workflow1": []*rawStage{
+					ID: &workflowID1,
+					Stages: []*rawStage{
 						&stage1,
 						&stage2,
 					},
 				},
 				{
-					"workflow2": []*rawStage{
+					ID: &workflowID2,
+					Stages: []*rawStage{
 						&stage2,
 					},
 				},

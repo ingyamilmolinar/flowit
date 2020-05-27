@@ -61,7 +61,6 @@ flowit:
     - from: develop
       to: [ develop:remote, master:local ]
 
-  # TODO: There's no pre-tag hook so we need to think of an alternative. Aliasing / overriding git tag?
   tags:
   - id: release
     format: v[0-9]+\.[0-9]+\.[0-9]+
@@ -78,20 +77,36 @@ flowit:
     format: stage
     branches: [ release ]
 
+  state-machines:
+    - id: simple-machine
+      stages: [ start, fetch, sync, publish, finish ]
+      initial-stage: start
+      final-stages: [ finish ]
+      transitions:
+      - from: [ "!finish" ]
+        to: [ "!start" ]
+
+    - id: simple-machine-no-fetch
+      stages: [ start, sync, publish, finish ]
+      initial-stage: start
+      final-stages: [ finish ]
+      transitions:
+      - from: [ "!finish" ]
+        to: [ "!start" ]
+
   workflows:
-  # POST MVP: - < current-branch-type | feature,bugfix >:
-  - feature:
-    # POST MVP: Define FSM state transitions on each "workflow"
+  - id: feature
+    state-machine: simple-machine
+    stages:
     - id: start
       args:
-      # POST MVP: - < feature-branch-suffix:bugfix-branch-suffix | Branch name without prefix >
       - < feature-branch-suffix | Branch name without prefix >
       - < jira-issue-id | Related Jira Issue ID >
       conditions:
-      - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+      - "echo [[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
       actions:
-      - git checkout develop
-      - git pull origin develop
+      - echo git checkout develop
+      - echo git pull origin develop
       - git checkout -b $<branches[feature].name> develop
       - jira transition $<jira-issue-id> 'In progress'
 
@@ -105,10 +120,10 @@ flowit:
 
     - id: sync
       actions:
-      - git checkout develop
-      - git pull origin develop
+      - echo git checkout develop
+      - echo git pull origin develop
       - git checkout $<branches[feature].name>
-      - git rebase develop
+      - echo git rebase develop
 
     - id: publish
       conditions:
@@ -130,16 +145,17 @@ flowit:
       - git branch -D $<branches[feature].name>
       - git push --delete origin $<branches[feature].name>
 
-  - bugfix:
+
+  - id: bugfix
+    state-machine: simple-machine
+    stages:
     - id: start
       args:
       - < bugfix-branch-suffix | Branch name without prefix >
       - < jira-issue-id | Related Jira Issue ID >
-      # POST MVP: - "[ base-branch-name=develop | Base branch name | develop,release ]"
       conditions:
       - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
       actions:
-      # POST MVP: - git checkout $<base-branch-name>
       - git checkout develop
       - git pull origin develop
       - git checkout -b $<branches[bugfix].name> develop
@@ -180,7 +196,10 @@ flowit:
       - git branch -D $<branches[bugfix].name>
       - git push --delete origin $<branches[bugfix].name>
 
-  - release:
+
+  - id: release
+    state-machine: simple-machine-no-fetch
+    stages:
     - id: start
       args:
       - < release-branch-suffix | Branch name without prefix >
@@ -227,7 +246,9 @@ flowit:
       - git branch -D $<branches[release].name>
       - git push --delete origin $<branches[release].name>
   
-  - hotfix:
+  - id: hotfix
+    state-machine: simple-machine-no-fetch
+    stages:
     - id: start
       args:
       - < hotfix-branch-suffix | Branch name without prefix >

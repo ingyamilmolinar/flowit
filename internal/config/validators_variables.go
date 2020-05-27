@@ -19,7 +19,7 @@ func variablesValidator(variables interface{}) error {
 		}
 		for _, variableValue := range *variables {
 			if err := validator.Validate(variableValue, validator.By(variableValueValidator)); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 		return nil
@@ -28,7 +28,9 @@ func variablesValidator(variables interface{}) error {
 	}
 }
 
-// TODO: We may need to validate user defined variables
-func variableValueValidator(variableValue interface{}) error {
+func variableValueValidator(variable interface{}) error {
+	if variable == nil {
+		return errors.New("Variable value is nil")
+	}
 	return nil
 }

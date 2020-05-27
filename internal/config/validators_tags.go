@@ -13,10 +13,17 @@ func tagValidator(workflows []*rawWorkflow, branches []*rawBranch) validator.Rul
 		switch tag := tag.(type) {
 		case rawTag:
 			return validator.ValidateStruct(&tag,
-				validator.Field(&tag.ID, validator.Required, validator.By(tagIDValidator)),
-				validator.Field(&tag.Format, validator.Required, validator.By(tagFormatValidator)),
-				validator.Field(&tag.Stages, validator.By(tagStagesValidator(workflows))),
-				validator.Field(&tag.Branches, validator.Each(validator.By(tagBranchesValidator(branches)))),
+				validator.Field(&tag.ID,
+					validator.Required,
+					validator.By(tagIDValidator)),
+				validator.Field(&tag.Format,
+					validator.Required,
+					validator.By(tagFormatValidator)),
+				validator.Field(&tag.Stages,
+					validator.By(tagStagesValidator(workflows))),
+				validator.Field(&tag.Branches,
+					validator.Each(
+						validator.NewStringRule(tagBranchesValidator(branches), "Invalid tag branches: Branch is not defined"))),
 			)
 		default:
 			return errors.New("Invalid tag type. Got " + reflect.TypeOf(tag).Name())
@@ -48,14 +55,14 @@ func tagStagesValidator(workflows []*rawWorkflow) validator.RuleFunc {
 			for workflow, stages := range *stageMap {
 				foundWorkflow := false
 				for _, workflowStages := range workflows {
-					if workflowStages == nil {
-						return nil
+					if workflowStages == nil || workflowStages.ID == nil {
+						continue
 					}
-					if _, ok := (*workflowStages)[workflow]; !ok {
+					if *workflowStages.ID != workflow {
 						continue
 					}
 					foundWorkflow = true
-					foundStages := areStagesDefined(stages, (*workflowStages)[workflow])
+					foundStages := areStagesDefined(stages, workflowStages.Stages)
 					if !foundStages {
 						return errors.New("Invalid tag stages: Stage under workflow " + workflow + " is not defined")
 					}
@@ -75,7 +82,7 @@ func areStagesDefined(stages []*string, definedStages []*rawStage) bool {
 	foundStage := 0
 	for _, definedStage := range definedStages {
 		for _, stage := range stages {
-			if stage == nil {
+			if stage == nil || definedStage.ID == nil {
 				return false
 			}
 			stageID := (*definedStage.ID)
@@ -87,16 +94,8 @@ func areStagesDefined(stages []*string, definedStages []*rawStage) bool {
 	return foundStage == len(stages)
 }
 
-func tagBranchesValidator(branches []*rawBranch) validator.RuleFunc {
-	return func(branch interface{}) error {
-		switch branch := branch.(type) {
-		case string:
-			if ok := isBranchDefined(branch, branches); !ok {
-				return errors.New("Invalid tag branches: Branch " + branch + " is not defined")
-			}
-		default:
-			return errors.New("Invalid tag branches type. Got " + reflect.TypeOf(branch).Name())
-		}
-		return nil
+func tagBranchesValidator(branches []*rawBranch) func(string) bool {
+	return func(branch string) bool {
+		return isBranchDefined(branch, branches)
 	}
 }

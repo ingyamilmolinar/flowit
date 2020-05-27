@@ -59,6 +59,9 @@ func branchTransitionsValidator(eternal *bool) validator.RuleFunc {
 	return func(transitions interface{}) error {
 		switch transitions := transitions.(type) {
 		case []*rawTransition:
+			if eternal == nil {
+				return errors.New("Eternal property is nil")
+			}
 			if !*eternal && len(transitions) == 0 {
 				return errors.New("Invalid branch transitions: Transitions must be specified for non eternal branches")
 			} else if *eternal && len(transitions) > 0 {

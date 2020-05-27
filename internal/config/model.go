@@ -1,55 +1,90 @@
 package config
 
-// WorkflowDefinition is the consumer friendly data structure for reading the input configuration
+// WorkflowDefinition is the consumer friendly data structure that hosts the loaded workflow definition
 type WorkflowDefinition struct {
 	Flowit mainDefinition
 }
 
 type mainDefinition struct {
-	Version   string
-	Config    config
-	Variables variables
-	Branches  []branch
-	Tags      []tag
-	Workflows []workflow
+	Version       string
+	Config        Config
+	Variables     Variables
+	Branches      []Branch
+	Tags          []Tag
+	StateMachines []StateMachine
+	Workflows     []Workflow
 }
 
-type config struct {
+// Config is the consumer friendly data structure that hosts the loaded workflow definition configuration
+type Config struct {
 	AbortOnFailedAction bool
 	Strict              bool
 	Shell               string
 }
-type variables map[string]interface{}
 
-type branch struct {
+// Variables is the consumer friendly data structure that hosts the loaded workflow definition variables
+type Variables map[string]interface{}
+
+// Branch is the consumer friendly data structure that hosts the loaded workflow definition branch
+type Branch struct {
 	ID          string
 	Name        string
 	Prefix      string
 	Suffix      string
 	Eternal     bool
 	Protected   bool
-	Transitions []transition
+	Transitions []Transition
 }
 
-type tag struct {
+// Tag is the consumer friendly data structure that hosts the loaded workflow definition tag
+type Tag struct {
 	ID       string
 	Format   string
-	Stages   stages
+	Stages   Stages
 	Branches []string
 }
 
-type stages map[string][]string
+// StateMachine is the consumer friendly data structure that hosts
+// the loaded workflow definition state machine
+type StateMachine struct {
+	ID           string
+	Stages       []string
+	InitialStage string
+	FinalStages  []string
+	Transitions  []StateMachineTransition
+}
 
-type workflow map[string][]stage
+// StateMachineTransition is the consumer friendly data structure that hosts
+// the loaded workflow definition state machine transition
+type StateMachineTransition struct {
+	From []string
+	To   []string
+}
 
-type stage struct {
+// Stages is the consumer friendly data structure that hosts
+// the loaded workflow definition tag stages
+type Stages map[string][]string
+
+// Workflow is the consumer friendly data structure that hosts
+// the loaded workflow definition workflow
+type Workflow struct {
+	ID           string
+	StateMachine string
+	Stages       []Stage
+}
+
+// Stage is the consumer friendly data structure that hosts
+// the loaded workflow definition workflow stage
+type Stage struct {
 	ID         string
 	Args       []string
 	Conditions []string
 	Actions    []string
 }
 
-type transition struct {
+// Transition is the consumer friendly data structure that hosts
+// the loaded workflow definition branch transition
+type Transition struct {
 	From string
 	To   []string
 }

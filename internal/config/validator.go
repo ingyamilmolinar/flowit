@@ -25,9 +25,13 @@ func mainDefinitionFieldRules(mainDefinition *rawMainDefinition) []*validator.Fi
 		validator.Field(&mainDefinition.Tags,
 			validator.Each(validator.By(tagValidator(mainDefinition.Workflows, mainDefinition.Branches))),
 		),
+		validator.Field(&mainDefinition.StateMachines,
+			validator.Required,
+			validator.Each(validator.Required, validator.By(stateMachineValidator)),
+		),
 		validator.Field(&mainDefinition.Workflows,
 			validator.Required,
-			validator.Each(validator.Required, validator.By(workflowMapValidator)),
+			validator.Each(validator.Required, validator.By(workflowValidator(mainDefinition.StateMachines))),
 		),
 	}
 }

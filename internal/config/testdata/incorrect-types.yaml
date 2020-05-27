@@ -15,8 +15,18 @@ flowit:
     name: master
     eternal: true
     protected: false
+  state-machines:
+    - id: simple-machine
+      stages: [ start, sync, publish, finish ]
+      initial-stage: start
+      final-stages: [ finish ]
+      transitions:
+      - from: [ "!finish" ]
+        to: [ "!start" ]
   workflows:
-  - development:
+  - id: development
+    state-machine: simple-machine
+    stages:
     - id: start
       args:
       - < jira-issue-id | Related Jira Issue ID >

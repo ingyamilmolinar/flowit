@@ -2,8 +2,18 @@ flowit:
   version: "0.1"
   # Optional sections: config, variables, tags are missing
   # Required section: branches is missing
+  state-machines:
+    - id: simple-machine
+      stages: [ start, sync, publish, finish ]
+      initial-stage: start
+      final-stages: [ finish ]
+      transitions:
+      - from: [ "!finish" ]
+        to: [ "!start" ]
   workflows:
-  - development:
+  - id: development
+    state-machine: simple-machine
+    stages:
     - id: start
       args:
       - < jira-issue-id | Related Jira Issue ID >

@@ -32,7 +32,7 @@ func shellValidator(shell interface{}) error {
 			/* #gosec */
 			cmd := exec.Command(cmds[0], cmds[1:]...)
 			_, err := cmd.Output()
-			return err
+			return errors.WithStack(err)
 		}
 	default:
 		return errors.New("Invalid config shell type. Got " + reflect.TypeOf(shell).Name())
