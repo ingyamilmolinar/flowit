@@ -33,7 +33,7 @@ func Printf(format string, a ...interface{}) error {
 	return nil
 }
 
-// Printf receives a formatter string and list of anything and writes them to standard output appending a new line
+// Printfln receives a formatter string and list of anything and writes them to standard output appending a new line
 // following the specified format. Returns an error in case of failure
 func Printfln(format string, a ...interface{}) error {
 	if _, err := fmt.Printf(format+"\n", a...); err != nil {
