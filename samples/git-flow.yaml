@@ -103,10 +103,10 @@ flowit:
       - < feature-branch-suffix | Branch name without prefix >
       - < jira-issue-id | Related Jira Issue ID >
       conditions:
-      - "echo [[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
+      - "[[ $(jira list --status $<jira-issue-id>) == *'Open'* ]]"
       actions:
-      - echo git checkout develop
-      - echo git pull origin develop
+      - git checkout develop
+      - git pull origin develop
       - git checkout -b $<branches[feature].name> develop
       - jira transition $<jira-issue-id> 'In progress'
 
@@ -120,10 +120,10 @@ flowit:
 
     - id: sync
       actions:
-      - echo git checkout develop
-      - echo git pull origin develop
+      - git checkout develop
+      - git pull origin develop
       - git checkout $<branches[feature].name>
-      - echo git rebase develop
+      - git rebase develop
 
     - id: publish
       conditions:
