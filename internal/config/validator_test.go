@@ -630,7 +630,7 @@ var _ = Describe("Config", func() {
 				Expect(err.Error()).To(ContainSubstring("Transitions:"))
 			})
 
-			It("should return a descriptive error for a state-machine with a non reachable stage", func() {
+			It("should return a descriptive error for an invalid state-machine", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
 				config.Flowit.StateMachines[0].InitialStage = "stage-1"
@@ -647,10 +647,10 @@ var _ = Describe("Config", func() {
 				err := validateWorkflowDefinition(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
-				Expect(err.Error()).To(ContainSubstring("'stage-2' cannot be reached"))
+				Expect(err.Error()).To(ContainSubstring("Cannot reach a final node from 'stage-2' stage"))
 			})
 
-			It("should return a descriptive error for a state-machine with an invalid starting point", func() {
+			It("should return a descriptive error for an invalid state-machine", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
 				config.Flowit.StateMachines[0].InitialStage = "stage-1"
@@ -678,7 +678,31 @@ var _ = Describe("Config", func() {
 				Expect(err.Error()).To(ContainSubstring("'stage-1' cannot be the destination in a transition"))
 			})
 
-			It("should return a descriptive error for a state-machine with an invalid finish point", func() {
+			It("should return a descriptive error for an invalid state-machine", func() {
+				config := validConfigWithOptionalFields()
+				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
+				config.Flowit.StateMachines[0].InitialStage = "stage-1"
+				config.Flowit.StateMachines[0].FinalStages = []string{"stage-3"}
+				config.Flowit.StateMachines[0].Transitions = []StateMachineTransition{
+					{
+						From: []string{"stage-1"},
+						To:   []string{"stage-1", "stage-2"},
+					},
+					{
+						From: []string{"stage-2"},
+						To:   []string{"stage-3"},
+					},
+				}
+
+				rawConfig := rawify(&config)
+
+				err := validateWorkflowDefinition(rawConfig)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
+				Expect(err.Error()).To(ContainSubstring("'stage-1' cannot be the destination in a transition"))
+			})
+
+			It("should return a descriptive error for an invalid state-machine", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
 				config.Flowit.StateMachines[0].InitialStage = "stage-1"
@@ -706,7 +730,35 @@ var _ = Describe("Config", func() {
 				Expect(err.Error()).To(ContainSubstring("'stage-3' cannot be the source in a transition"))
 			})
 
-			It("should return a descriptive error for a state-machine with an invalid finish point", func() {
+			It("should return a descriptive error for an invalid state-machine", func() {
+				config := validConfigWithOptionalFields()
+				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
+				config.Flowit.StateMachines[0].InitialStage = "stage-1"
+				config.Flowit.StateMachines[0].FinalStages = []string{"stage-3"}
+				config.Flowit.StateMachines[0].Transitions = []StateMachineTransition{
+					{
+						From: []string{"stage-1"},
+						To:   []string{"stage-2", "stage-3"},
+					},
+					{
+						From: []string{"stage-2"},
+						To:   []string{"stage-3"},
+					},
+					{
+						From: []string{"stage-3"},
+						To:   []string{"stage-3"},
+					},
+				}
+
+				rawConfig := rawify(&config)
+
+				err := validateWorkflowDefinition(rawConfig)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
+				Expect(err.Error()).To(ContainSubstring("Final stage: 'stage-3' cannot be the source in a transition"))
+			})
+
+			It("should return a descriptive error for an invalid state-machine", func() {
 				config := validConfigWithOptionalFields()
 				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3", "stage-4"}
 				config.Flowit.StateMachines[0].InitialStage = "stage-1"
@@ -727,7 +779,55 @@ var _ = Describe("Config", func() {
 				err := validateWorkflowDefinition(rawConfig)
 				Expect(err).To(Not(BeNil()))
 				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
-				Expect(err.Error()).To(ContainSubstring("'stage-4' cannot be reached"))
+				Expect(err.Error()).To(ContainSubstring("Cannot reach a final node from 'stage-2' stage"))
+			})
+
+			It("should return a descriptive error for an invalid state-machine", func() {
+				config := validConfigWithOptionalFields()
+				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3"}
+				config.Flowit.StateMachines[0].InitialStage = "stage-1"
+				config.Flowit.StateMachines[0].FinalStages = []string{"stage-3"}
+				config.Flowit.StateMachines[0].Transitions = []StateMachineTransition{
+					{
+						From: []string{"stage-1"},
+						To:   []string{"stage-2", "stage-3"},
+					},
+				}
+
+				rawConfig := rawify(&config)
+
+				err := validateWorkflowDefinition(rawConfig)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
+				Expect(err.Error()).To(ContainSubstring("Cannot reach a final node from 'stage-2' stage"))
+			})
+
+			It("should return a descriptive error for an invalid state-machine", func() {
+				config := validConfigWithOptionalFields()
+				config.Flowit.StateMachines[0].Stages = []string{"stage-1", "stage-2", "stage-3", "stage-4"}
+				config.Flowit.StateMachines[0].InitialStage = "stage-1"
+				config.Flowit.StateMachines[0].FinalStages = []string{"stage-4"}
+				config.Flowit.StateMachines[0].Transitions = []StateMachineTransition{
+					{
+						From: []string{"stage-1"},
+						To:   []string{"stage-2", "stage-4"},
+					},
+					{
+						From: []string{"stage-2"},
+						To:   []string{"stage-3"},
+					},
+					{
+						From: []string{"stage-3"},
+						To:   []string{"stage-2"},
+					},
+				}
+
+				rawConfig := rawify(&config)
+
+				err := validateWorkflowDefinition(rawConfig)
+				Expect(err).To(Not(BeNil()))
+				Expect(err.Error()).To(ContainSubstring("StateMachines:"))
+				Expect(err.Error()).To(ContainSubstring("Cannot reach a final node from 'stage-2' stage"))
 			})
 
 		})

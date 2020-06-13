@@ -18,9 +18,14 @@ func NewString(str string) OptionalString {
 
 // Get works on a pointer to OptionalString and returns the string wrapped in the optional or
 // returns an error in case the optional is empty
-func (optional *OptionalString) Get() (string, error) {
+func (optional OptionalString) Get() (string, error) {
 	if !optional.isSet {
 		return optional.str, errors.New("optional value is not set")
 	}
 	return optional.str, nil
+}
+
+// IsSet returns whether or not the optional is wrapping a string instance
+func (optional OptionalString) IsSet() bool {
+	return optional.isSet
 }

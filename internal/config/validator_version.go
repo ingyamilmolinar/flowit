@@ -4,20 +4,14 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
-// TODO: Change to NewStringRule!
 func versionValidator(version interface{}) error {
 	switch version := version.(type) {
 	case *string:
 		var supportedVersions = []string{"0.1"}
-		found := false
-		for _, supportedVersion := range supportedVersions {
-			if *version == supportedVersion {
-				found = true
-			}
-		}
-		if !found {
+		if found := utils.FindStringInArray(*version, supportedVersions); !found {
 			return errors.New("Unsupported workflow definition version")
 		}
 	default:

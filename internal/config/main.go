@@ -5,27 +5,27 @@ import (
 	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
-var workflowDefinition WorkflowDefinition
-var configLoaded bool
+type ConfigService struct {
+	workflowDefinition *WorkflowDefinition
+}
 
-// LoadConfiguration reads, parses and validates the specified yaml configuration file
+// NewConfigService reads, parses and validates the specified configuration file and creates a new config service
 // Returns an error if any step fails
-func LoadConfiguration(fileName string, fileLocation string) error {
-
+func NewConfigService(fileName string, fileLocation string) (*ConfigService, error) {
 	// TODO: Hash parsed and validated config and verify if it changed or not?
 	viper, err := readWorkflowDefinition(fileName, fileLocation)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// TODO: Viper is allowing repeated keys...
 	rawWorkflowDefinition, err := unmarshallWorkflowDefinition(viper)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	if err = validateWorkflowDefinition(rawWorkflowDefinition); err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	applyTransformations(rawWorkflowDefinition)
@@ -33,67 +33,51 @@ func LoadConfiguration(fileName string, fileLocation string) error {
 	// Since viper does not allow for array defaults, we roll our own mechanism
 	setDefaults(rawWorkflowDefinition)
 
+	var workflowDefinition WorkflowDefinition
 	if err := utils.DeepCopy(rawWorkflowDefinition, &workflowDefinition); err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
-	configLoaded = true
-	return nil
+	return &ConfigService{&workflowDefinition}, nil
 }
 
 // GetVersion returns the loaded workflow definition version
-// Panics if configuration has not been loaded
-func GetVersion() string {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Version
+func (cs ConfigService) GetVersion() string {
+	return cs.workflowDefinition.Flowit.Version
 }
 
 // GetConfig returns the loaded workflow definition configuration
-// Panics if configuration has not been loaded
-func GetConfig() Config {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Config
+func (cs ConfigService) GetConfig() Config {
+	return cs.workflowDefinition.Flowit.Config
 }
 
 // GetVariables returns the loaded workflow definition variables
-// Panics if configuration has not been loaded
-func GetVariables() Variables {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Variables
+func (cs ConfigService) GetVariables() Variables {
+	return cs.workflowDefinition.Flowit.Variables
 }
 
 // GetBranches returns the loaded workflow definition branches
-// Panics if configuration has not been loaded
-func GetBranches() []Branch {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Branches
+func (cs ConfigService) GetBranches() []Branch {
+	return cs.workflowDefinition.Flowit.Branches
 }
 
 // GetTags returns the loaded workflow definition tags
-// Panics if configuration has not been loaded
-func GetTags() []Tag {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Tags
+func (cs ConfigService) GetTags() []Tag {
+	return cs.workflowDefinition.Flowit.Tags
 }
 
 // GetStateMachines returns the loaded workflow definition state machines
-// Panics if configuration has not been loaded
-func GetStateMachines() []StateMachine {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.StateMachines
+func (cs ConfigService) GetStateMachines() []StateMachine {
+	return cs.workflowDefinition.Flowit.StateMachines
 }
 
 // GetWorkflows returns the loaded workflow definition workflows
-// Panics if configuration has not been loaded
-func GetWorkflows() []Workflow {
-	panicIfConfigNotLoaded()
-	return workflowDefinition.Flowit.Workflows
+func (cs ConfigService) GetWorkflows() []Workflow {
+	return cs.workflowDefinition.Flowit.Workflows
 }
 
 // GetStages returns the loaded workflow definition stages for the specified workflowID
-// Panics if configuration has not been loaded
-func GetStages(workflowID string) ([]Stage, error) {
-	panicIfConfigNotLoaded()
-	for _, workflow := range workflowDefinition.Flowit.Workflows {
+func (cs ConfigService) GetStages(workflowID string) ([]Stage, error) {
+	for _, workflow := range cs.workflowDefinition.Flowit.Workflows {
 		if workflow.ID == workflowID {
 			return workflow.Stages, nil
 		}
@@ -102,10 +86,8 @@ func GetStages(workflowID string) ([]Stage, error) {
 }
 
 // GetStage returns the loaded workflow definition stage for the specified workflowID and stageID
-// Panics if configuration has not been loaded
-func GetStage(workflowID, stageID string) (Stage, error) {
-	panicIfConfigNotLoaded()
-	for _, workflow := range workflowDefinition.Flowit.Workflows {
+func (cs ConfigService) GetStage(workflowID, stageID string) (Stage, error) {
+	for _, workflow := range cs.workflowDefinition.Flowit.Workflows {
 		if workflow.ID == workflowID {
 			for _, stage := range workflow.Stages {
 				if stage.ID == stageID {
@@ -116,10 +98,4 @@ func GetStage(workflowID, stageID string) (Stage, error) {
 		}
 	}
 	return Stage{}, errors.New("Invalid workflowID: " + workflowID)
-}
-
-func panicIfConfigNotLoaded() {
-	if !configLoaded {
-		panic("Configuration has not been loaded successfully!")
-	}
 }

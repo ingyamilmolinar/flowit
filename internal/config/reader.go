@@ -5,11 +5,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-const configType = "yaml"
-
 func readWorkflowDefinition(fileName string, fileLocation string) (*viper.Viper, error) {
 	viper := viper.New()
-	viper.SetConfigType(configType)
+	viper.SetConfigType("yaml")
 	viper.SetConfigName(fileName)
 	viper.AddConfigPath(fileLocation)
 	if err := viper.ReadInConfig(); err != nil {

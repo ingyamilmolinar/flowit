@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/utils"
 
 	"hash/fnv"
 
@@ -58,14 +59,7 @@ func stateMachineStageValidator(stateMachineStage interface{}) error {
 
 func isStateMachineStageValid(stateMachineStages []*string) func(string) bool {
 	return func(stateMachineInitialStage string) bool {
-		found := false
-		for _, definedStage := range stateMachineStages {
-			if *definedStage == stateMachineInitialStage {
-				found = true
-				break
-			}
-		}
-		return found
+		return utils.FindStringInPtrArray(stateMachineInitialStage, stateMachineStages)
 	}
 }
 
@@ -150,29 +144,14 @@ func getAllOtherStages(transitionStage string, stages []*string) ([]*string, err
 
 func validateStateMachineGraph(sm rawStateMachine) error {
 	dg := buildDirectedGraph(sm)
-	if err := validateUnreachableStages(dg, sm); err != nil {
-		return errors.WithStack(err)
-	}
 	if err := validateInitialStage(dg, *sm.InitialStage); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := validateStartToFinishPath(dg, *sm.InitialStage, sm.FinalStages); err != nil {
+	if err := validatePaths(dg, sm); err != nil {
 		return errors.WithStack(err)
 	}
 	if err := validateFinalStages(dg, sm.FinalStages); err != nil {
 		return errors.WithStack(err)
-	}
-	return nil
-}
-
-func validateUnreachableStages(dg graph.Directed, sm rawStateMachine) error {
-	for _, stage := range sm.Stages {
-		if *stage == *sm.InitialStage {
-			continue
-		}
-		if dg.To(generateNodeID(*stage)).Len() == 0 {
-			return errors.New("Stage '" + *stage + "' cannot be reached")
-		}
 	}
 	return nil
 }
@@ -184,21 +163,24 @@ func validateInitialStage(dg graph.Directed, initialStage string) error {
 	return nil
 }
 
-// TODO: Is this validation necessary?
-func validateStartToFinishPath(dg graph.Directed, initialStage string, finalStages []*string) error {
-	reachableNodes := getReachableNodes(dg, dg.Node(generateNodeID(initialStage)))
-	for _, finalStage := range finalStages {
-		found := false
-		for _, node := range reachableNodes {
-			if node.ID() == generateNodeID(*finalStage) {
-				found = true
-				break
+func validatePaths(dg graph.Directed, sm rawStateMachine) error {
+	for _, stage := range sm.Stages {
+		if found := utils.FindStringInPtrArray(*stage, sm.FinalStages); found {
+			continue
+		}
+
+		reachableFinalStages := 0
+		for _, reachableNode := range getReachableNodes(dg, dg.Node(generateNodeID(*stage))) {
+			for _, finalStage := range sm.FinalStages {
+				if reachableNode.ID() == generateNodeID(*finalStage) {
+					reachableFinalStages++
+				}
 			}
 		}
-		if !found {
-			return errors.New("There is no transition from initial stage '" + initialStage +
-				"' to final stage '" + *finalStage + "'")
+		if reachableFinalStages == 0 {
+			return errors.New("Cannot reach a final node from '" + *stage + "' stage")
 		}
+
 	}
 	return nil
 }
@@ -240,17 +222,21 @@ func buildDirectedGraph(sm rawStateMachine) graph.Directed {
 	}
 
 	digraph := simple.NewDirectedGraph()
-	for _, state := range sm.Stages {
-		digraph.AddNode(newNode(*state))
+	for _, stage := range sm.Stages {
+		digraph.AddNode(newNode(*stage))
 	}
 	for _, transition := range parsedTransitions {
 		for _, from := range transition.From {
 			for _, to := range transition.To {
 				fromNode := digraph.Node(generateNodeID(*from))
 				toNode := digraph.Node(generateNodeID(*to))
-				// TODO: How to analyze a cyclic graph??
-				// Cyclic workflows that can finish are supported
-				if fromNode.ID() != toNode.ID() {
+				if fromNode.ID() == toNode.ID() {
+					// TODO: Workaround panic for self-referencing nodes!!
+					intermediateNode := newNode(*from + "_" + *to)
+					digraph.AddNode(intermediateNode)
+					digraph.SetEdge(newEdge(fromNode, intermediateNode))
+					digraph.SetEdge(newEdge(intermediateNode, toNode))
+				} else {
 					digraph.SetEdge(newEdge(fromNode, toNode))
 				}
 			}
