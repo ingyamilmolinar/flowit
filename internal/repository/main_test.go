@@ -43,11 +43,12 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully save and retrieve a populated workflow", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			err := r.PutWorkflow(workflow)
+			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
-			optionalWorkflow, err := r.GetWorkflow("definition", "1")
+			optionalWorkflow, err := rs.GetWorkflow("definition", "1")
 			Expect(err).To(BeNil())
 			savedWorkflow, err := optionalWorkflow.Get()
 			Expect(err).To(BeNil())
@@ -57,15 +58,16 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully overwrite a workflow", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			err := r.PutWorkflow(workflow)
+			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
 			expectedWorkflow := workflow
 			expectedWorkflow.Name = "other workflow"
-			err = r.PutWorkflow(expectedWorkflow)
+			err = rs.PutWorkflow(expectedWorkflow)
 			Expect(err).To(BeNil())
-			overwrittenWorkflowOption, err := r.GetWorkflow("definition", "1")
+			overwrittenWorkflowOption, err := rs.GetWorkflow("definition", "1")
 			Expect(err).To(BeNil())
 			overwrittenWorkflow, err := overwrittenWorkflowOption.Get()
 			Expect(err).To(BeNil())
@@ -79,19 +81,20 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a workflow", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			err := r.PutWorkflow(workflow)
+			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
 
 			workflow2 := workflow
 			workflow2.ID = "2"
 			workflow2.Name = "workflow 2"
 
-			err = r.PutWorkflow(workflow2)
+			err = rs.PutWorkflow(workflow2)
 			Expect(err).To(BeNil())
 
-			firstWorkflowOptional, err := r.GetWorkflow("definition", "1")
+			firstWorkflowOptional, err := rs.GetWorkflow("definition", "1")
 			Expect(err).To(BeNil())
 			firstWorkflow, err := firstWorkflowOptional.Get()
 			Expect(err).To(BeNil())
@@ -101,17 +104,18 @@ var _ = Describe("Repository", func() {
 
 		It("should return an empty optional when workflow does not exist", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			firstWorkflowOptional, err := r.GetWorkflow("definition", "1")
+			firstWorkflowOptional, err := rs.GetWorkflow("definition", "1")
 			Expect(err).To(BeNil())
 			_, err = firstWorkflowOptional.Get()
 			Expect(err).To(Not(BeNil()))
 
-			err = r.PutWorkflow(workflow)
+			err = rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
 
-			firstWorkflowOptional, err = r.GetWorkflow("Definition", "1")
+			firstWorkflowOptional, err = rs.GetWorkflow("Definition", "1")
 			Expect(err).To(BeNil())
 			_, err = firstWorkflowOptional.Get()
 			Expect(err).To(Not(BeNil()))
@@ -120,7 +124,8 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a workflow from prefix", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "100"
@@ -134,26 +139,26 @@ var _ = Describe("Repository", func() {
 			workflow3.ID = "300"
 			workflow3.Name = "workflow 3"
 
-			err := r.PutWorkflow(workflow1)
+			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow2)
+			err = rs.PutWorkflow(workflow2)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow3)
+			err = rs.PutWorkflow(workflow3)
 			Expect(err).To(BeNil())
 
-			workflowOptional, err := r.GetWorkflowFromPreffix("definition", "1")
+			workflowOptional, err := rs.GetWorkflowFromPreffix("definition", "1")
 			Expect(err).To(BeNil())
 			workflowWithPrefix, err := workflowOptional.Get()
 			Expect(err).To(BeNil())
 			Expect(workflowWithPrefix).To(Equal(workflow1))
 
-			workflowOptional, err = r.GetWorkflowFromPreffix("definition", "2")
+			workflowOptional, err = rs.GetWorkflowFromPreffix("definition", "2")
 			Expect(err).To(BeNil())
 			workflowWithPrefix, err = workflowOptional.Get()
 			Expect(err).To(BeNil())
 			Expect(workflowWithPrefix).To(Equal(workflow2))
 
-			workflowOptional, err = r.GetWorkflowFromPreffix("definition", "3")
+			workflowOptional, err = rs.GetWorkflowFromPreffix("definition", "3")
 			Expect(err).To(BeNil())
 			workflowWithPrefix, err = workflowOptional.Get()
 			Expect(err).To(BeNil())
@@ -163,16 +168,17 @@ var _ = Describe("Repository", func() {
 
 		It("should return an empty optional when a workflow does not start with prefix", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "01"
 			workflow1.Name = "workflow 1"
 
-			err := r.PutWorkflow(workflow1)
+			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
 
-			workflowOptional, err := r.GetWorkflowFromPreffix("definition", "1")
+			workflowOptional, err := rs.GetWorkflowFromPreffix("definition", "1")
 			Expect(err).To(BeNil())
 			_, err = workflowOptional.Get()
 			Expect(err).To(Not(BeNil()))
@@ -181,7 +187,8 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a list of n workflows", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "1"
@@ -195,27 +202,27 @@ var _ = Describe("Repository", func() {
 			workflow3.ID = "3"
 			workflow3.Name = "workflow 3"
 
-			err := r.PutWorkflow(workflow1)
+			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow2)
+			err = rs.PutWorkflow(workflow2)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow3)
+			err = rs.PutWorkflow(workflow3)
 			Expect(err).To(BeNil())
 
-			workflows, err := r.GetWorkflows("definition", 0, false)
+			workflows, err := rs.GetWorkflows("definition", 0, false)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(3))
 			Expect(workflows[0]).To(Equal(workflow1))
 			Expect(workflows[1]).To(Equal(workflow2))
 			Expect(workflows[2]).To(Equal(workflow3))
 
-			workflows, err = r.GetWorkflows("definition", 2, false)
+			workflows, err = rs.GetWorkflows("definition", 2, false)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(2))
 			Expect(workflows[0]).To(Equal(workflow1))
 			Expect(workflows[1]).To(Equal(workflow2))
 
-			workflows, err = r.GetWorkflows("definition", 4, false)
+			workflows, err = rs.GetWorkflows("definition", 4, false)
 			Expect(len(workflows)).To(Equal(3))
 			Expect(workflows[0]).To(Equal(workflow1))
 			Expect(workflows[1]).To(Equal(workflow2))
@@ -226,7 +233,8 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a list of active workflows", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "1"
@@ -243,25 +251,25 @@ var _ = Describe("Repository", func() {
 			workflow3.Name = "workflow 3"
 			workflow3.IsActive = true
 
-			err := r.PutWorkflow(workflow1)
+			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow2)
+			err = rs.PutWorkflow(workflow2)
 			Expect(err).To(BeNil())
-			err = r.PutWorkflow(workflow3)
+			err = rs.PutWorkflow(workflow3)
 			Expect(err).To(BeNil())
 
-			workflows, err := r.GetWorkflows("definition", 0, true)
+			workflows, err := rs.GetWorkflows("definition", 0, true)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(2))
 			Expect(workflows[0]).To(Equal(workflow1))
 			Expect(workflows[1]).To(Equal(workflow3))
 
-			workflows, err = r.GetWorkflows("definition", 1, true)
+			workflows, err = rs.GetWorkflows("definition", 1, true)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(1))
 			Expect(workflows[0]).To(Equal(workflow1))
 
-			workflows, err = r.GetWorkflows("definition", 3, true)
+			workflows, err = rs.GetWorkflows("definition", 3, true)
 			Expect(len(workflows)).To(Equal(2))
 			Expect(workflows[0]).To(Equal(workflow1))
 			Expect(workflows[1]).To(Equal(workflow3))
@@ -275,13 +283,14 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully delete a workflow", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			err := r.PutWorkflow(workflow)
+			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
-			err = r.DeleteWorkflow("definition", "1")
+			err = rs.DeleteWorkflow("definition", "1")
 			Expect(err).To(BeNil())
-			deletedWorkflowOptional, err := r.GetWorkflow("definition", "1")
+			deletedWorkflowOptional, err := rs.GetWorkflow("definition", "1")
 			Expect(err).To(BeNil())
 			_, err = deletedWorkflowOptional.Get()
 			Expect(err).To(Not(BeNil()))
@@ -290,9 +299,10 @@ var _ = Describe("Repository", func() {
 
 		It("should return an error if workflow does not exist", func() {
 
-			defer r.DeleteDB()
+			rs := r.New()
+			defer rs.Drop()
 
-			err := r.DeleteWorkflow("definition", "1")
+			err := rs.DeleteWorkflow("definition", "1")
 			Expect(err).To(Not(BeNil()))
 
 		})
@@ -303,16 +313,19 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully wipe out the DB", func() {
 
-			err := r.PutWorkflow(workflow)
+			rs := r.New()
+			defer rs.Drop()
+
+			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
 
-			workflows, err := r.GetWorkflows("definition", 0, false)
+			workflows, err := rs.GetWorkflows("definition", 0, false)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(1))
 
-			r.DeleteDB()
+			rs.Drop()
 
-			workflows, err = r.GetWorkflows("definition", 0, false)
+			workflows, err = rs.GetWorkflows("definition", 0, false)
 			Expect(err).To(BeNil())
 			Expect(len(workflows)).To(Equal(0))
 
