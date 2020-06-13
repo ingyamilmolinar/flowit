@@ -16,7 +16,7 @@ func transformTransitions(transitions []*rawStateMachineTransition, stages []*st
 	for _, transition := range transitions {
 		var transformedFrom []*string
 		for _, from := range transition.From {
-			if strings.HasPrefix(*from, transitionExceptionPrefix) {
+			if strings.HasPrefix(*from, transitionExceptionPrefix()) {
 				// We can safely ignore error since the transitions were validated already
 				otherStages, _ := getAllOtherStages((*from)[1:], stages)
 				transformedFrom = append(transformedFrom, otherStages...)
@@ -27,7 +27,7 @@ func transformTransitions(transitions []*rawStateMachineTransition, stages []*st
 		transition.From = transformedFrom
 		var transformedTo []*string
 		for _, to := range transition.To {
-			if strings.HasPrefix(*to, transitionExceptionPrefix) {
+			if strings.HasPrefix(*to, transitionExceptionPrefix()) {
 				// We can safely ignore error since the transitions were validated already
 				otherStages, _ := getAllOtherStages((*to)[1:], stages)
 				transformedTo = append(transformedTo, otherStages...)

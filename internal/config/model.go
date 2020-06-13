@@ -1,11 +1,14 @@
 package config
 
+import "github.com/pkg/errors"
+
 // WorkflowDefinition is the consumer friendly data structure that hosts the loaded workflow definition
 type WorkflowDefinition struct {
-	Flowit mainDefinition
+	Flowit Flowit
 }
 
-type mainDefinition struct {
+// Flowit is the consumer friendly data structure that hosts the loaded workflow definition main body
+type Flowit struct {
 	Version       string
 	Config        Config
 	Variables     Variables
@@ -87,4 +90,29 @@ type Stage struct {
 type Transition struct {
 	From string
 	To   []string
+}
+
+// Stages returns the loaded workflow definition stages for the specified workflowID
+func (wd WorkflowDefinition) Stages(workflowID string) ([]Stage, error) {
+	for _, workflow := range wd.Flowit.Workflows {
+		if workflow.ID == workflowID {
+			return workflow.Stages, nil
+		}
+	}
+	return nil, errors.New("Invalid workflowID: " + workflowID)
+}
+
+// Stage returns the loaded workflow definition stage for the specified workflowID and stageID
+func (wd WorkflowDefinition) Stage(workflowID, stageID string) (Stage, error) {
+	for _, workflow := range wd.Flowit.Workflows {
+		if workflow.ID == workflowID {
+			for _, stage := range workflow.Stages {
+				if stage.ID == stageID {
+					return stage, nil
+				}
+			}
+			return Stage{}, errors.New("Invalid stageID: " + stageID)
+		}
+	}
+	return Stage{}, errors.New("Invalid workflowID: " + workflowID)
 }

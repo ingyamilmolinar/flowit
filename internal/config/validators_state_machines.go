@@ -14,7 +14,9 @@ import (
 	"gonum.org/v1/gonum/graph/simple"
 )
 
-const transitionExceptionPrefix = "!"
+func transitionExceptionPrefix() string {
+	return "!"
+}
 
 func stateMachineValidator(stateMachine interface{}) error {
 	switch stateMachine := stateMachine.(type) {
@@ -111,7 +113,7 @@ func parseTransitionStages(transitionStages []*string, stages []*string) ([]*str
 	var parsedTransitionStages []*string
 	for _, transitionStage := range transitionStages {
 
-		if strings.HasPrefix(*transitionStage, transitionExceptionPrefix) {
+		if strings.HasPrefix(*transitionStage, transitionExceptionPrefix()) {
 			transitionStages, err := getAllOtherStages((*transitionStage)[1:], stages)
 			if err != nil {
 				return nil, errors.WithStack(err)
@@ -231,7 +233,7 @@ func buildDirectedGraph(sm rawStateMachine) graph.Directed {
 				fromNode := digraph.Node(generateNodeID(*from))
 				toNode := digraph.Node(generateNodeID(*to))
 				if fromNode.ID() == toNode.ID() {
-					// TODO: Workaround panic for self-referencing nodes!!
+					// Workaround for self-referencing nodes
 					intermediateNode := newNode(*from + "_" + *to)
 					digraph.AddNode(intermediateNode)
 					digraph.SetEdge(newEdge(fromNode, intermediateNode))

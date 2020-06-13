@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO: Fail on empty map not on missing map. Apply fix to all optional sections
 func configValidator(config interface{}) error {
 	switch config := config.(type) {
 	case *rawConfig:
-		// TODO: Fail on empty map not on missing map. Apply fix to all optional sections
 		// config is optional
 		if config == nil {
 			return nil

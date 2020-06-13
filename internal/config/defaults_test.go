@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,9 +25,9 @@ var _ = Describe("Config", func() {
 				Flowit: &mainDefinition,
 			}
 			setDefaults(&workflowDefinition)
-			Expect(*workflowDefinition.Flowit.Config.AbortOnFailedAction).To(Equal(defaultValues.AbortOnFailedAction))
+			Expect(*workflowDefinition.Flowit.Config.AbortOnFailedAction).To(Equal(true))
 			Expect(*workflowDefinition.Flowit.Config.Strict).To(Equal(strict))
-			Expect(*workflowDefinition.Flowit.Config.Shell).To(Equal(defaultValues.Shell))
+			Expect(*workflowDefinition.Flowit.Config.Shell).To(Equal(os.Getenv("SHELL")))
 
 			shell := "bash"
 			config = rawConfig{
@@ -40,8 +42,8 @@ var _ = Describe("Config", func() {
 				Flowit: &mainDefinition,
 			}
 			setDefaults(&workflowDefinition)
-			Expect(*workflowDefinition.Flowit.Config.AbortOnFailedAction).To(Equal(defaultValues.AbortOnFailedAction))
-			Expect(*workflowDefinition.Flowit.Config.Strict).To(Equal(defaultValues.Strict))
+			Expect(*workflowDefinition.Flowit.Config.AbortOnFailedAction).To(Equal(true))
+			Expect(*workflowDefinition.Flowit.Config.Strict).To(Equal(false))
 			Expect(*workflowDefinition.Flowit.Config.Shell).To(Equal(shell))
 		})
 

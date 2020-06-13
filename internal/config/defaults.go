@@ -12,58 +12,57 @@ type defaults struct {
 	Branches            []*string
 }
 
-// We need a package global variable to be the target of our rawWorkflowDefinition pointers
-var defaultValues defaults
-var emptyConfig rawConfig
-
-// setDefaults receives a validated raw workflow definition and includes default values where nil pointers are seen
-// TODO: Can we make this function stateless??
 func setDefaults(workflowDefinition *rawWorkflowDefinition) {
+	setDefaultValues(workflowDefinition, generateDefaultValues(workflowDefinition))
+}
+
+func generateDefaultValues(workflowDefinition *rawWorkflowDefinition) *defaults {
+
+	var defaultValues defaults
 
 	defaultValues.AbortOnFailedAction = true
-
 	defaultValues.Strict = false
+	defaultValues.Shell = generateDefaultShell()
+	defaultValues.Stages = generateDefaultStages(workflowDefinition.Flowit.Workflows)
+	defaultValues.Branches = generateDefaultBranches(workflowDefinition.Flowit.Branches)
 
-	defaultValues.Shell = func() string {
-		envShell := os.Getenv("SHELL")
-		if envShell != "" {
-			return envShell
+	return &defaultValues
+}
+
+// TODO: Set shell according to the OS
+func generateDefaultShell() string {
+	envShell := os.Getenv("SHELL")
+	if envShell != "" {
+		return envShell
+	}
+	return "/usr/bin/env bash"
+}
+
+func generateDefaultStages(workflows []*rawWorkflow) rawStages {
+	allStages := make(rawStages)
+	for _, workflow := range workflows {
+		workflowID := workflow.ID
+		stagesIDs := make([]*string, len(workflow.Stages))
+		for i, stage := range workflow.Stages {
+			stagesIDs[i] = stage.ID
 		}
-		// TODO: Set shell according to the OS
-		return "/usr/bin/env bash"
-	}()
+		allStages[*workflowID] = stagesIDs
+	}
+	return allStages
+}
 
-	defaultValues.Stages = func() rawStages {
-		// Defaults to all stages
-		allStages := make(rawStages)
-		for _, workflow := range workflowDefinition.Flowit.Workflows {
-			workflowID := workflow.ID
-			stagesIDs := make([]*string, len(workflow.Stages))
-			for i, stage := range workflow.Stages {
-				stagesIDs[i] = stage.ID
-			}
-			allStages[*workflowID] = stagesIDs
-		}
-		return allStages
-	}()
-
-	defaultValues.Branches = func() []*string {
-		// Defaults to all branches
-		allBranches := make([]*string, len(workflowDefinition.Flowit.Branches))
-		for i, branch := range workflowDefinition.Flowit.Branches {
-			allBranches[i] = branch.ID
-		}
-		return allBranches
-	}()
-
-	setDefaultValues(workflowDefinition, &defaultValues)
+func generateDefaultBranches(branches []*rawBranch) []*string {
+	allBranches := make([]*string, len(branches))
+	for i, branch := range branches {
+		allBranches[i] = branch.ID
+	}
+	return allBranches
 }
 
 func setDefaultValues(workflowDefinition *rawWorkflowDefinition, defaultValues *defaults) {
+	// In case 'config' section is missing all together
 	if workflowDefinition.Flowit.Config == nil {
-		// In case 'config' section is missing all together
-		// TODO: This is extremely ugly
-		workflowDefinition.Flowit.Config = &emptyConfig
+		workflowDefinition.Flowit.Config = &rawConfig{}
 	}
 	if workflowDefinition.Flowit.Config.AbortOnFailedAction == nil {
 		workflowDefinition.Flowit.Config.AbortOnFailedAction = &defaultValues.AbortOnFailedAction
