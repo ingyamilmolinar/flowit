@@ -15,7 +15,7 @@ var _ = Describe("Config", func() {
 		Context("Processing a valid configuration", func() {
 
 			It("should return a populated Flowit structure", func() {
-				cs, err := config.Load("valid", "./testdata")
+				cs, err := config.Load("./testdata/valid.yaml")
 				Expect(err).To(BeNil())
 				Expect(cs.Flowit.Version).To(Equal("0.1"))
 				Expect(cs.Flowit.Config.Shell).To(Equal("/usr/bin/env bash"))
@@ -31,7 +31,7 @@ var _ = Describe("Config", func() {
 		Context("Processing an invalid configuration", func() {
 
 			It("should return a descriptive error", func() {
-				_, err := config.Load("incorrect-types", "./testdata")
+				_, err := config.Load("./testdata/incorrect-types.yaml")
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(MatchRegexp("[0-9]+ error\\(s\\) decoding:"))
 			})

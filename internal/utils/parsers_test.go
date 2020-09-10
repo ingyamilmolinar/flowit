@@ -89,11 +89,12 @@ var _ = Describe("Utils", func() {
 
 	})
 
+	// TODO: Add other data types!
 	Describe("Validating variable evaluation from map", func() {
 
 		It("should evaluate every variable defined in map", func() {
 
-			replacementMap := map[string]string{
+			replacementMap := map[string]interface{}{
 				"my-var":   "value!",
 				"my-var-2": "another value!",
 			}
@@ -126,7 +127,7 @@ var _ = Describe("Utils", func() {
 			Expect(expression).To(BeIdenticalTo(""))
 			Expect(err).ToNot(BeNil())
 
-			replacementMap = map[string]string{}
+			replacementMap = map[string]interface{}{}
 			expression, err = EvaluateVariablesInExpression("my var = no variables here!", replacementMap)
 			Expect(expression).To(BeIdenticalTo("my var = no variables here!"))
 			Expect(err).To(BeNil())

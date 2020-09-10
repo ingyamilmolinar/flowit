@@ -84,18 +84,18 @@ func workflowStagesValidator(workflowStateMachineID string, stateMachines []*raw
 
 			foundStageCounter := 0
 			for _, stage := range stages {
-				foundStageID := false
+				foundStage := false
 				for _, stateMachineStages := range workflowStateMachine.Stages {
 					if stage.ID == nil || stateMachineStages == nil {
 						continue
 					}
 					if *stage.ID == *stateMachineStages {
-						foundStageID = true
+						foundStage = true
 						foundStageCounter++
 						break
 					}
 				}
-				if !foundStageID && stage.ID != nil && workflowStateMachine.ID != nil {
+				if !foundStage && stage.ID != nil && workflowStateMachine.ID != nil {
 					return errors.New("Stage with ID: " + *stage.ID +
 						" is not a valid " + *workflowStateMachine.ID + " state machine stage")
 				}
@@ -114,7 +114,7 @@ func workflowStagesValidator(workflowStateMachineID string, stateMachines []*raw
 func workflowStageValidator(stage interface{}) error {
 	switch stage := stage.(type) {
 	case rawStage:
-		if err := validator.Validate(stage.ID, validator.Required, validator.By(stageIDValidator)); err != nil {
+		if err := validator.Validate(stage.ID, validator.Required, validator.By(stageValidator)); err != nil {
 			return errors.WithStack(err)
 		}
 		if err := validator.Validate(stage.Args, validator.By(stageArgsValidator)); err != nil {
@@ -132,7 +132,7 @@ func workflowStageValidator(stage interface{}) error {
 	return nil
 }
 
-func stageIDValidator(id interface{}) error {
+func stageValidator(id interface{}) error {
 	return validIdentifier(id)
 }
 

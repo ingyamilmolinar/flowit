@@ -4,10 +4,13 @@ import (
 	"github.com/looplab/fsm"
 )
 
+// Service exposes the methods to interact with the FSM service
 type Service struct {
 	stateMachines map[string]*fsm.FSM
 }
 
+// StateMachine is the data structure representing the state machine properties
+// that will initialize the FSM service
 type StateMachine struct {
 	ID           string
 	States       []string
@@ -16,11 +19,13 @@ type StateMachine struct {
 	Transitions  []StateMachineTransition
 }
 
+// StateMachineTransition encodes the allowed transitions between state machine states
 type StateMachineTransition struct {
 	From []string
 	To   []string
 }
 
+// NewService initializes and returns a new instance of the FSM service
 func NewService(stateMachines []StateMachine) *Service {
 	var smMap = make(map[string]*fsm.FSM, len(stateMachines))
 	for _, stateMachine := range stateMachines {
@@ -57,6 +62,7 @@ func NewService(stateMachines []StateMachine) *Service {
 	return &Service{stateMachines: smMap}
 }
 
+// IsTransitionValid verifies whether or not a state machine can transition between two given states
 func (s Service) IsTransitionValid(stateMachineID string, states ...string) bool {
 	if len(states) == 0 || len(states) > 2 {
 		return false
@@ -81,6 +87,8 @@ func (s Service) IsTransitionValid(stateMachineID string, states ...string) bool
 	return canTransition
 }
 
+// AvailableStates returns the states that are immediately available to transition to
+// for a given state machine
 func (s Service) AvailableStates(stateMachineID string, currentState string) []string {
 	stateMachine := s.stateMachines[stateMachineID]
 	originalState := stateMachine.Current()
@@ -91,11 +99,15 @@ func (s Service) AvailableStates(stateMachineID string, currentState string) []s
 	return availableTransitions
 }
 
+// InitialState returns the initial state of a state machine
 func (s Service) InitialState(stateMachineID string) string {
 	stateMachine := s.stateMachines[stateMachineID]
 	return stateMachine.AvailableTransitions()[0]
 }
 
+// IsActiveState validates whether or not a particular state is active
+// for a given state machine. Active states are all state machine states
+// except the origin state and the final state
 func (s Service) IsActiveState(stateMachineID, state string) bool {
 	stateMachine := s.stateMachines[stateMachineID]
 	originState := stateMachine.Current()
@@ -105,6 +117,8 @@ func (s Service) IsActiveState(stateMachineID, state string) bool {
 	return originState != state && availableTransitions > 0
 }
 
+// IsFinalState validates whether or not a particular state is final
+// for a given state machine
 func (s Service) IsFinalState(stateMachineID, state string) bool {
 	originState := s.stateMachines[stateMachineID].Current()
 	return !s.IsActiveState(stateMachineID, state) && originState != state

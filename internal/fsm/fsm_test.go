@@ -63,14 +63,13 @@ var _ = Describe("FSM", func() {
 				for _, from := range transition.From {
 
 					states := service.AvailableStates("state-machine-1", from)
-					Expect(states).To(BeEquivalentTo(transition.To))
+					Expect(states).To(ConsistOf(transition.To))
 
 				}
 			}
 
-			var emptyStates []string
 			states := service.AvailableStates("state-machine-1", "stage-4")
-			Expect(states).To(BeEquivalentTo(emptyStates))
+			Expect(len(states)).To(Equal(0))
 
 		})
 

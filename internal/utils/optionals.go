@@ -9,7 +9,7 @@ type OptionalString struct {
 }
 
 // NewString receives a string and returns a filled optional ready to be unwrapped
-func NewString(str string) OptionalString {
+func NewStringOptional(str string) OptionalString {
 	return OptionalString{
 		str:   str,
 		isSet: true,

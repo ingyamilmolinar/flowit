@@ -38,7 +38,7 @@ func ExtractVariableNameFromVariableDeclaration(expression string) (string, erro
 // EvaluateVariablesInExpression receives an expression and a replacementMap and returns the expression with all
 // its variables replaced. It returns an error if the expression does not contain a variable reference or if a variable
 // reference is not in the replacement map
-func EvaluateVariablesInExpression(expression string, replacementMap map[string]string) (string, error) {
+func EvaluateVariablesInExpression(expression string, replacementMap map[string]interface{}) (string, error) {
 	if !DoesExpressionContainsVariableReference(expression) {
 		return expression, nil
 	}
@@ -48,7 +48,7 @@ func EvaluateVariablesInExpression(expression string, replacementMap map[string]
 		if _, ok := replacementMap[match[1]]; !ok {
 			return "", errors.New("Variable: " + match[0] + " could not be evaluated")
 		}
-		expression = strings.ReplaceAll(expression, match[0], replacementMap[match[1]])
+		expression = strings.ReplaceAll(expression, match[0], replacementMap[match[1]].(string))
 	}
 	return expression, nil
 }

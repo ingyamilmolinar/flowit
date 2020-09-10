@@ -4,34 +4,34 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/yamil-rivera/flowit/internal/models"
 	r "github.com/yamil-rivera/flowit/internal/repository"
+	"github.com/yamil-rivera/flowit/internal/workflow"
 )
 
 var _ = Describe("Repository", func() {
 
-	execution := models.Execution{
+	execution := workflow.Execution{
 		ID:    "2",
-		State: "state",
-		Metadata: models.ExecutionMetadata{
+		Stage: "stage",
+		Metadata: workflow.ExecutionMetadata{
 			Version:  0xABABABAB,
 			Started:  0xBCBCBCBC,
 			Finished: 0xCDCDCDCD,
 		},
 	}
-	workflow := models.Workflow{
-		ID:           "1",
-		Name:         "workflow",
-		DefinitionID: "definition",
-		IsActive:     true,
-		Executions: []models.Execution{
+	workflow := workflow.Workflow{
+		ID:       "1",
+		Preffix:  "workflow",
+		Name:     "definition",
+		IsActive: true,
+		Executions: []workflow.Execution{
 			execution,
 		},
 		LatestExecution: &execution,
-		Variables: map[string]string{
+		Variables: map[string]interface{}{
 			"my-var": "my-val",
 		},
-		Metadata: models.WorkflowMetadata{
+		Metadata: workflow.WorkflowMetadata{
 			Version:  0xDEDEDEDE,
 			Started:  0xEFEFEFEF,
 			Updated:  0xABABABAB,
@@ -43,7 +43,7 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully save and retrieve a populated workflow", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.PutWorkflow(workflow)
@@ -58,13 +58,13 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully overwrite a workflow", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.PutWorkflow(workflow)
 			Expect(err).To(BeNil())
 			expectedWorkflow := workflow
-			expectedWorkflow.Name = "other workflow"
+			expectedWorkflow.Preffix = "other workflow"
 			err = rs.PutWorkflow(expectedWorkflow)
 			Expect(err).To(BeNil())
 			overwrittenWorkflowOption, err := rs.GetWorkflow("definition", "1")
@@ -81,7 +81,7 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a workflow", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.PutWorkflow(workflow)
@@ -89,7 +89,7 @@ var _ = Describe("Repository", func() {
 
 			workflow2 := workflow
 			workflow2.ID = "2"
-			workflow2.Name = "workflow 2"
+			workflow2.Preffix = "workflow 2"
 
 			err = rs.PutWorkflow(workflow2)
 			Expect(err).To(BeNil())
@@ -104,7 +104,7 @@ var _ = Describe("Repository", func() {
 
 		It("should return an empty optional when workflow does not exist", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			firstWorkflowOptional, err := rs.GetWorkflow("definition", "1")
@@ -124,20 +124,20 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a workflow from prefix", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "100"
-			workflow1.Name = "workflow 1"
+			workflow1.Preffix = "workflow 1"
 
 			workflow2 := workflow
 			workflow2.ID = "200"
-			workflow2.Name = "workflow 2"
+			workflow2.Preffix = "workflow 2"
 
 			workflow3 := workflow
 			workflow3.ID = "300"
-			workflow3.Name = "workflow 3"
+			workflow3.Preffix = "workflow 3"
 
 			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
@@ -168,12 +168,12 @@ var _ = Describe("Repository", func() {
 
 		It("should return an empty optional when a workflow does not start with prefix", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "01"
-			workflow1.Name = "workflow 1"
+			workflow1.Preffix = "workflow 1"
 
 			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
@@ -187,20 +187,20 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a list of n workflows", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "1"
-			workflow1.Name = "workflow 1"
+			workflow1.Preffix = "workflow 1"
 
 			workflow2 := workflow
 			workflow2.ID = "2"
-			workflow2.Name = "workflow 2"
+			workflow2.Preffix = "workflow 2"
 
 			workflow3 := workflow
 			workflow3.ID = "3"
-			workflow3.Name = "workflow 3"
+			workflow3.Preffix = "workflow 3"
 
 			err := rs.PutWorkflow(workflow1)
 			Expect(err).To(BeNil())
@@ -233,22 +233,22 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully retrieve a list of active workflows", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			workflow1 := workflow
 			workflow1.ID = "1"
-			workflow1.Name = "workflow 1"
+			workflow1.Preffix = "workflow 1"
 			workflow1.IsActive = true
 
 			workflow2 := workflow
 			workflow2.ID = "2"
-			workflow2.Name = "workflow 2"
+			workflow2.Preffix = "workflow 2"
 			workflow2.IsActive = false
 
 			workflow3 := workflow
 			workflow3.ID = "3"
-			workflow3.Name = "workflow 3"
+			workflow3.Preffix = "workflow 3"
 			workflow3.IsActive = true
 
 			err := rs.PutWorkflow(workflow1)
@@ -283,7 +283,7 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully delete a workflow", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.PutWorkflow(workflow)
@@ -299,7 +299,7 @@ var _ = Describe("Repository", func() {
 
 		It("should return an error if workflow does not exist", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.DeleteWorkflow("definition", "1")
@@ -313,7 +313,7 @@ var _ = Describe("Repository", func() {
 
 		It("should successfully wipe out the DB", func() {
 
-			rs := r.New()
+			rs := r.NewService()
 			defer rs.Drop()
 
 			err := rs.PutWorkflow(workflow)

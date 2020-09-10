@@ -99,10 +99,10 @@ func (wd WorkflowDefinition) Stages(workflowID string) ([]Stage, error) {
 			return workflow.Stages, nil
 		}
 	}
-	return nil, errors.New("Invalid workflowID: " + workflowID)
+	return nil, errors.New("Invalid workflow ID: " + workflowID)
 }
 
-// Stage returns the loaded workflow definition stage for the specified workflowID and stageID
+// Stage returns the loaded workflow definition stage for the specified workflowID and stage
 func (wd WorkflowDefinition) Stage(workflowID, stageID string) (Stage, error) {
 	for _, workflow := range wd.Flowit.Workflows {
 		if workflow.ID == workflowID {
@@ -111,8 +111,8 @@ func (wd WorkflowDefinition) Stage(workflowID, stageID string) (Stage, error) {
 					return stage, nil
 				}
 			}
-			return Stage{}, errors.New("Invalid stageID: " + stageID)
+			return Stage{}, errors.New("Invalid stage ID: " + stageID)
 		}
 	}
-	return Stage{}, errors.New("Invalid workflowID: " + workflowID)
+	return Stage{}, errors.New("Invalid workflow ID: " + workflowID)
 }
