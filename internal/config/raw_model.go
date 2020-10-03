@@ -10,36 +10,16 @@ type rawMainDefinition struct {
 	Version       *string
 	Config        *rawConfig
 	Variables     *rawVariables
-	Branches      []*rawBranch
-	Tags          []*rawTag
 	StateMachines []*rawStateMachine `mapstructure:"state-machines"`
 	Workflows     []*rawWorkflow
 }
 
 type rawConfig struct {
 	AbortOnFailedAction *bool `mapstructure:"abort-on-failed-action"`
-	Strict              *bool
 	Shell               *string
 }
 
 type rawVariables map[string]interface{}
-
-type rawBranch struct {
-	ID          *string
-	Name        *string
-	Prefix      *string
-	Suffix      *string
-	Eternal     *bool
-	Protected   *bool
-	Transitions []*rawTransition
-}
-
-type rawTag struct {
-	ID       *string
-	Format   *string
-	Stages   *rawStages
-	Branches []*string
-}
 
 type rawStateMachine struct {
 	ID           *string

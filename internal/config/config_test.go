@@ -21,7 +21,6 @@ var _ = Describe("Config", func() {
 				Expect(cs.Flowit.Config.Shell).To(Equal("/usr/bin/env bash"))
 				/* #gomnd */
 				Expect(cs.Flowit.Variables["gerrit-port"]).To(Equal(float64(29418)))
-				Expect(cs.Flowit.Branches[0].ID).To(Equal("master"))
 				Expect(cs.Flowit.Workflows[0].Stages[0].Actions[0]).
 					To(Equal("git checkout master"))
 			})

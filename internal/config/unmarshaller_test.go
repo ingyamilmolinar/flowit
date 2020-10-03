@@ -53,7 +53,6 @@ var _ = Describe("Config", func() {
 				Expect(err).To(Not(BeNil()))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))
-				Expect(errors.Cause(err).Error()).To(ContainSubstring("Branches"))
 				Expect(definition).To(BeNil())
 			})
 

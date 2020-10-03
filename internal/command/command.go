@@ -104,8 +104,8 @@ func (s *Service) RegisterCommands(version string) error {
 
 	rootCommand := &cobra.Command{
 		Use:   "flowit",
-		Short: "A flexible git workflow manager",
-		Long:  "A flexible git workflow manager",
+		Short: "A flexible workflow manager",
+		Long:  "A flexible workflow manager",
 	}
 
 	for _, mainCommand := range mainCommands {

@@ -12,8 +12,6 @@ type Flowit struct {
 	Version       string
 	Config        Config
 	Variables     Variables
-	Branches      []Branch
-	Tags          []Tag
 	StateMachines []StateMachine
 	Workflows     []Workflow
 }
@@ -21,31 +19,11 @@ type Flowit struct {
 // Config is the consumer friendly data structure that hosts the loaded workflow definition configuration
 type Config struct {
 	AbortOnFailedAction bool
-	Strict              bool
 	Shell               string
 }
 
 // Variables is the consumer friendly data structure that hosts the loaded workflow definition variables
 type Variables map[string]interface{}
-
-// Branch is the consumer friendly data structure that hosts the loaded workflow definition branch
-type Branch struct {
-	ID          string
-	Name        string
-	Prefix      string
-	Suffix      string
-	Eternal     bool
-	Protected   bool
-	Transitions []Transition
-}
-
-// Tag is the consumer friendly data structure that hosts the loaded workflow definition tag
-type Tag struct {
-	ID       string
-	Format   string
-	Stages   Stages
-	Branches []string
-}
 
 // StateMachine is the consumer friendly data structure that hosts
 // the loaded workflow definition state machine

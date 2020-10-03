@@ -1,17 +1,14 @@
 flowit:
   version: "0.1"
+
   config:
     abort-on-failed-action: true
-    strict: false
     shell: /usr/bin/env bash
+
   variables:
     gerrit-host: gerrit.review.com
     gerrit-port: 29418
-  branches:
-  - id: master
-    name: master
-    eternal: true
-    protected: false
+
   state-machines:
     - id: simple-machine
       stages: [ start, sync, publish, finish ]
@@ -20,6 +17,7 @@ flowit:
       transitions:
       - from: [ "!finish" ]
         to: [ "!start" ]
+
   workflows:
   - id: development
     state-machine: simple-machine

@@ -1,15 +1,7 @@
 flowit:
   version: "0.1"
-  # Optional sections: config, variables, tags are missing
-  # Required section: branches is missing
-  state-machines:
-    - id: simple-machine
-      stages: [ start, sync, publish, finish ]
-      initial-stage: start
-      final-stages: [ finish ]
-      transitions:
-      - from: [ "!finish" ]
-        to: [ "!start" ]
+  # Optional sections: config, variables are missing
+  # Required section: state-machines is missing
   workflows:
   - id: development
     state-machine: simple-machine

@@ -1,20 +1,16 @@
 flowit:
   version: "0.1"
+
   config:
     # The following line is invalid. Should be a boolean
     abort-on-failed-action: "true"
-    strict: false
     # The following line is invalid. Should be a string
     shell: 12345
+
   variables:
     gerrit-host: gerrit.review.com
     gerrit-port: 29418
-  branches:
-    # The following line is invalid. Should be a list
-    id: master
-    name: master
-    eternal: true
-    protected: false
+
   state-machines:
     - id: simple-machine
       stages: [ start, sync, publish, finish ]
@@ -23,6 +19,7 @@ flowit:
       transitions:
       - from: [ "!finish" ]
         to: [ "!start" ]
+        
   workflows:
   - id: development
     state-machine: simple-machine
