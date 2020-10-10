@@ -41,34 +41,34 @@ func (e UnixShellExecutor) Execute(command string) (string, error) {
 	return trimmedOut, nil
 }
 
-func (s *Service) Execute(commands []string, variables map[string]interface{}) ([]string, error) {
+func (s *Service) Execute(commands []string, variables map[string]interface{}, checkpoint int) ([]string, int, error) {
 
-	out, err := s.runCommands(commands, variables)
+	out, i, err := s.runCommands(commands[checkpoint:], variables)
 	if err != nil {
-		return out, errors.WithStack(err)
+		return out, i + checkpoint, errors.WithStack(err)
 	}
 
-	return out, nil
+	return out, 0, nil
 }
 
-func (s Service) runCommands(commands []string, variables map[string]interface{}) ([]string, error) {
+func (s Service) runCommands(commands []string, variables map[string]interface{}) ([]string, int, error) {
 
 	if len(commands) == 0 {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	var outs []string
-	for _, command := range commands {
+	for i, command := range commands {
 		parsedCommand, err := utils.EvaluateVariablesInExpression(command, variables)
 		if err != nil {
-			return outs, errors.Wrap(err, "Error evaluating variables in command: "+command)
+			return outs, i, errors.Wrap(err, "Error evaluating variables in command: "+command)
 		}
 		out, err := s.executor.Execute(parsedCommand)
 		outs = append(outs, out)
 		if err != nil {
-			return outs, errors.Wrap(err, "Error executing command: "+parsedCommand)
+			return outs, i, errors.Wrap(err, "Error executing command: "+parsedCommand)
 		}
 	}
 
-	return outs, nil
+	return outs, 0, nil
 }

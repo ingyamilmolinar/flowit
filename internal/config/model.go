@@ -18,7 +18,7 @@ type Flowit struct {
 
 // Config is the consumer friendly data structure that hosts the loaded workflow definition configuration
 type Config struct {
-	AbortOnFailedAction bool
+	CheckpointExecution bool
 	Shell               string
 }
 

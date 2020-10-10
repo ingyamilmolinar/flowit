@@ -1,6 +1,7 @@
 package io
 
 import (
+	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -16,5 +17,9 @@ func init() {
 	Logger.Formatter.(*logrus.TextFormatter).FullTimestamp = true
 	Logger.SetReportCaller(true)
 	Logger.SetLevel(logrus.DebugLevel)
-	Logger.SetOutput(os.Stdout)
+	if os.Getenv("DEBUG") == "true" {
+		Logger.SetOutput(os.Stdout)
+	} else {
+		Logger.SetOutput(ioutil.Discard)
+	}
 }

@@ -2,7 +2,7 @@ flowit:
   version: "0.1"
 
   config:
-    abort-on-failed-action: true
+    checkpoint-execution: true
     shell: /usr/bin/env bash
 
   variables:

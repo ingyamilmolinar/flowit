@@ -30,8 +30,9 @@ var _ = Describe("Runtime", func() {
 			validCommands := []string{
 				"COMMAND_1",
 			}
-			out, err := service.Execute(validCommands, nil)
+			out, errIdx, err := service.Execute(validCommands, nil, 0)
 			Expect(err).To(BeNil())
+			Expect(errIdx).To(BeZero())
 			Expect(out).To(BeEquivalentTo([]string{"COMMAND_1"}))
 
 		})
@@ -42,8 +43,9 @@ var _ = Describe("Runtime", func() {
 				"COMMAND_1",
 				"FAIL",
 			}
-			out, err := service.Execute(invalidCommands, nil)
+			out, errIdx, err := service.Execute(invalidCommands, nil, 0)
 			Expect(err).ToNot(BeNil())
+			Expect(errIdx).To(Equal(1))
 			Expect(out).To(BeEquivalentTo([]string{"COMMAND_1", "FAIL"}))
 
 		})
@@ -58,8 +60,9 @@ var _ = Describe("Runtime", func() {
 				"variable-1": "value1",
 				"variable-2": "value2",
 			}
-			out, err := service.Execute(commands, variables)
+			out, errIdx, err := service.Execute(commands, variables, 0)
 			Expect(err).To(BeNil())
+			Expect(errIdx).To(BeZero())
 			Expect(out).To(BeEquivalentTo([]string{"value1", "value2"}))
 
 		})
@@ -72,8 +75,9 @@ var _ = Describe("Runtime", func() {
 			variables := map[string]interface{}{
 				"variable-1": "value",
 			}
-			out, err := service.Execute(commands, variables)
+			out, errIdx, err := service.Execute(commands, variables, 0)
 			Expect(err).ToNot(BeNil())
+			Expect(errIdx).To(BeZero())
 			Expect(len(out)).To(Equal(0))
 
 		})

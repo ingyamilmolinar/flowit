@@ -12,10 +12,11 @@ import (
 )
 
 type RuntimeService interface {
-	Execute(commands []string, variables map[string]interface{}) ([]string, error)
+	Execute(commands []string, variables map[string]interface{}, checkpoint int) ([]string, int, error)
 }
 
 type FsmService interface {
+	OriginState() string
 	InitialState(stateMachineID string) string
 	AvailableStates(stateMachineID string, state string) []string
 	IsFinalState(stateMachineID, state string) bool
@@ -31,7 +32,8 @@ type RepositoryService interface {
 
 type WorkflowService interface {
 	CreateWorkflow(workflowName string, variables map[string]interface{}) *w.Workflow
-	StartExecution(workflow *w.Workflow, currentState string) *w.Execution
+	StartExecution(workflow *w.Workflow, fromStage, currentState string) *w.Execution
+	SetCheckpoint(execution *w.Execution, checkpoint int)
 	FinishExecution(workflow *w.Workflow, execution *w.Execution, workflowState w.WorkflowState) error
 	AddVariables(workflow *w.Workflow, variables map[string]interface{})
 }
@@ -179,7 +181,21 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 					workflow = &wf
 				}
 
-				execution := s.workflowService.StartExecution(workflow, stageID)
+				checkpoint := 0
+				// TODO: This should only apply if the arguments are the same
+				if workflow.LatestExecution != nil && s.workflowDefinition.Flowit.Config.CheckpointExecution {
+					lastExecution := workflow.LatestExecution
+					if lastExecution.Checkpoint >= 0 {
+						checkpoint = lastExecution.Checkpoint
+					}
+				}
+
+				fromStageID := s.fsmService.OriginState()
+				if workflow.LatestExecution != nil {
+					fromStageID = workflow.LatestExecution.Stage
+				}
+
+				execution := s.workflowService.StartExecution(workflow, fromStageID, stageID)
 				stage, _ := s.workflowDefinition.Stage(workflowName, stageID)
 
 				if len(stage.Args) > 0 {
@@ -196,20 +212,31 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 
 				if len(stage.Conditions) > 0 {
 					io.Println("Running conditions...")
-					out, err := s.runtimeService.Execute(stage.Conditions, workflow.Variables)
+					out, _, err := s.runtimeService.Execute(stage.Conditions, workflow.Variables, 0)
+					io.Println(strings.Join(utils.MergeSlices(stage.Conditions, out), "\n"))
 					if err != nil {
 						return errors.WithStack(err)
 					}
-					io.Println(strings.Join(out, "\n"))
-					io.Println()
 				}
-				// TODO: Persist command state in workflow so we can resume if abort-on-failed-action == true
+
 				io.Println("Running actions...")
-				out, err := s.runtimeService.Execute(stage.Actions, workflow.Variables)
+				out, failedActionIdx, err := s.runtimeService.Execute(stage.Actions, workflow.Variables, checkpoint)
 				if err != nil {
+					io.Println(strings.Join(utils.MergeSlices(stage.Actions[checkpoint:failedActionIdx], out), "\n"))
+					if s.workflowDefinition.Flowit.Config.CheckpointExecution {
+						s.workflowService.SetCheckpoint(execution, failedActionIdx)
+						io.Println("Checkpoint set on command: ", stage.Actions[failedActionIdx])
+						execution.Stage = execution.FromStage
+						if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
+							return errors.WithStack(err)
+						}
+						if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
+							return errors.WithStack(err)
+						}
+					}
 					return errors.WithStack(err)
 				}
-				io.Println(strings.Join(out, "\n"))
+				io.Println(strings.Join(utils.MergeSlices(stage.Actions[checkpoint:], out), "\n"))
 
 				isFinal := s.fsmService.IsFinalState(workflowName, stageID)
 				workflowState := w.STARTED
@@ -260,7 +287,11 @@ func (s Service) generatePossibleCommands(workflowName, workflowID string) ([]co
 	var availableStates []string
 	workflow, err := workflowOptional.Get()
 	if err == nil {
-		availableStates = s.fsmService.AvailableStates(workflowName, workflow.LatestExecution.Stage)
+		if workflow.LatestExecution.Checkpoint >= 0 {
+			availableStates = s.fsmService.AvailableStates(workflowName, workflow.LatestExecution.FromStage)
+		} else {
+			availableStates = s.fsmService.AvailableStates(workflowName, workflow.LatestExecution.Stage)
+		}
 	} else {
 		availableState := s.fsmService.InitialState(workflowName)
 		availableStates = append(availableStates, availableState)
@@ -289,9 +320,9 @@ func (s Service) generateCancelCommand(workflowName string) command {
 						return errors.WithStack(err)
 					}
 
-					// TODO: Mark workflows as cancelled instead of deleting them
 					// We are sure optionalWorkflowID is always wrapping a workflowID
 					workflowID, _ := optionalWorkflowID.Get()
+					// TODO: CancelWorkflow
 					err = s.repositoryService.DeleteWorkflow(workflowName, workflowID)
 					if err == nil {
 						io.Println("Workflow with ID: " + workflowID + " was cancelled")

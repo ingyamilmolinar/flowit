@@ -51,7 +51,7 @@ var _ = Describe("Config", func() {
 				}
 				definition, err := unmarshallWorkflowDefinition(viper)
 				Expect(err).To(Not(BeNil()))
-				Expect(errors.Cause(err).Error()).To(ContainSubstring("abort-on-failed-action"))
+				Expect(errors.Cause(err).Error()).To(ContainSubstring("checkpoint-execution"))
 				Expect(errors.Cause(err).Error()).To(ContainSubstring("Config.Shell"))
 				Expect(definition).To(BeNil())
 			})

@@ -52,7 +52,7 @@ var _ = Describe("Workflow", func() {
 
 			// start first execution
 			before := time.Now()
-			execution := service.StartExecution(workflow, "stage-1")
+			execution := service.StartExecution(workflow, "origin", "stage-1")
 			after := time.Now()
 
 			// assert workflow and first execution
@@ -75,6 +75,7 @@ var _ = Describe("Workflow", func() {
 			firstExecutionID := execution.ID
 			_, err = uuid.Parse(execution.ID)
 			Expect(err).To(BeNil())
+			Expect(execution.FromStage).To(Equal("origin"))
 			Expect(execution.Stage).To(Equal("stage-1"))
 			Expect(execution.Metadata.Version).To(BeEquivalentTo(0))
 			Expect(execution.Metadata.Started).To(Equal(workflow.Metadata.Started))
@@ -82,7 +83,7 @@ var _ = Describe("Workflow", func() {
 
 			// start second execution
 			before = time.Now()
-			execution = service.StartExecution(workflow, "stage-2")
+			execution = service.StartExecution(workflow, "stage-1", "stage-2")
 			after = time.Now()
 
 			// assert workflow and second execution
@@ -101,6 +102,7 @@ var _ = Describe("Workflow", func() {
 			_, err = uuid.Parse(execution.ID)
 			Expect(secondExecutionID).ToNot(Equal(firstExecutionID))
 			Expect(err).To(BeNil())
+			Expect(execution.FromStage).To(Equal("stage-1"))
 			Expect(execution.Stage).To(Equal("stage-2"))
 			Expect(execution.Metadata.Version).To(BeEquivalentTo(0))
 			Expect(execution.Metadata.Started).To(Equal(workflow.Metadata.Updated))
@@ -117,7 +119,7 @@ var _ = Describe("Workflow", func() {
 			workflow := service.CreateWorkflow("my-workflow", nil)
 
 			// start and finish execution
-			execution := service.StartExecution(workflow, "stage-1")
+			execution := service.StartExecution(workflow, "origin", "stage-1")
 			before := time.Now()
 			err := service.FinishExecution(workflow, execution, w.STARTED)
 			after := time.Now()
@@ -136,7 +138,7 @@ var _ = Describe("Workflow", func() {
 			workflow := service.CreateWorkflow("my-workflow", nil)
 
 			// start and finish execution
-			execution := service.StartExecution(workflow, "stage-1")
+			execution := service.StartExecution(workflow, "origin", "stage-1")
 			before := time.Now()
 			err := service.FinishExecution(workflow, execution, w.FINISHED)
 			after := time.Now()
@@ -154,7 +156,7 @@ var _ = Describe("Workflow", func() {
 
 			workflow := service.CreateWorkflow("my-workflow", nil)
 
-			execution := service.StartExecution(workflow, "stage-1")
+			execution := service.StartExecution(workflow, "origin", "stage-1")
 			err := service.FinishExecution(workflow, execution, w.STARTED)
 			Expect(err).To(BeNil())
 

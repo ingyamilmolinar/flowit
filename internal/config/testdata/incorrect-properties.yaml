@@ -2,8 +2,8 @@ flowit:
   version: "0.1"
 
   config:
-    # The following line is invalid. Should be abort-on-failed-action
-    abortOnFailedAction: true
+    # The following line is invalid. Should be checkpoint-execution
+    CheckpointExecution: true
     shell: /usr/bin/env bash
 
   variables:

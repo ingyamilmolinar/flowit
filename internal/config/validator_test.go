@@ -696,7 +696,7 @@ func validConfigWithOptionalFields() WorkflowDefinition {
 
 	flowit.Version = "0.1"
 	flowit.Config = Config{
-		AbortOnFailedAction: true,
+		CheckpointExecution: true,
 		Shell:               "/usr/bin/env bash",
 	}
 	flowit.Variables = map[string]interface{}{

@@ -41,11 +41,11 @@ Number describing to which specification version this particular workflow defini
 
 #### Config (Optional)
 The workflow designer can tweek `flowit` behavior to address their specific needs.
-- `abort-on-failed-action`: Wether or not to abort a workflow stage if an action command returns a non zero status code. The default is `true`.
+- `checkpoint-execution`: Wether or not to abort a workflow stage if an action command returns a non zero status code. The default is `true`.
 - `shell`: Location of the executable shell in which the stage `conditions` and `actions` commands will run. It defaults to the default shell. This value is OS dependent.
 ```yaml
   config:
-    abort-on-failed-action: true
+    checkpoint-execution: true
     shell: /usr/bin/env bash
 ```
 
@@ -139,7 +139,7 @@ These stages are part of the `feature` workflow. This means that each stage will
 
  On the `start` stage definition we can see that there are two arguments defined. This means that in order to start a new `feature` workflow we will need to run `flowit feature start <arg-1>`. `feature-branch-suffix` workflow variable will be set to whatever value of `arg-1` we specify in the command line. This feature will allow the workflow designer to refer to instances of values specified in previous stages without having the need to specify them as arguments in each stage they are needed.
  
- Each of the conditions will be sequentially run and in case of all succeeding, the actions will be performed in the same manner. In case of any action failing, the value of `abort-on-failed-action` will be taken into account in wether or not to abort or continue the stage actions execution. 
+ Each of the conditions will be sequentially run and in case of all succeeding, the actions will be performed in the same manner. In case of any action failing, the value of `checkpoint-execution` will be taken into account in wether or not to abort or continue the stage actions execution. 
  
  One last important thing to note is that for every initial stage command that is run, a new unique workflow instance identifier will be generated so we can reference a specific workflow in case multiple workflows are run in parallel (which is normally the case). In order to run a following allowed stage such as `publish` or `finish`, we should specify the workflow instance ID (short version): `flowit feature <workflow-instance-id> <stage-id> [args...]`.
 

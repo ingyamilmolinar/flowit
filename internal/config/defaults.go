@@ -5,7 +5,7 @@ import (
 )
 
 type defaults struct {
-	AbortOnFailedAction bool
+	CheckpointExecution bool
 	Shell               string
 	Stages              rawStages
 	Branches            []*string
@@ -19,7 +19,7 @@ func generateDefaultValues(workflowDefinition *rawWorkflowDefinition) *defaults 
 
 	var defaultValues defaults
 
-	defaultValues.AbortOnFailedAction = true
+	defaultValues.CheckpointExecution = true
 	defaultValues.Shell = generateDefaultShell()
 
 	return &defaultValues
@@ -39,8 +39,8 @@ func setDefaultValues(workflowDefinition *rawWorkflowDefinition, defaultValues *
 	if workflowDefinition.Flowit.Config == nil {
 		workflowDefinition.Flowit.Config = &rawConfig{}
 	}
-	if workflowDefinition.Flowit.Config.AbortOnFailedAction == nil {
-		workflowDefinition.Flowit.Config.AbortOnFailedAction = &defaultValues.AbortOnFailedAction
+	if workflowDefinition.Flowit.Config.CheckpointExecution == nil {
+		workflowDefinition.Flowit.Config.CheckpointExecution = &defaultValues.CheckpointExecution
 	}
 	if workflowDefinition.Flowit.Config.Shell == nil {
 		workflowDefinition.Flowit.Config.Shell = &defaultValues.Shell

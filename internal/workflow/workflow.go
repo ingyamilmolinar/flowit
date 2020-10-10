@@ -29,9 +29,11 @@ type WorkflowMetadata struct {
 
 // Execution is the data structure representing a single execution instance
 type Execution struct {
-	ID       string
-	Stage    string
-	Metadata ExecutionMetadata
+	ID         string
+	FromStage  string
+	Stage      string
+	Checkpoint int
+	Metadata   ExecutionMetadata
 }
 
 // ExecutionMetadata is the data structure that provides execution instance metadata
@@ -51,6 +53,7 @@ type WorkflowState int
 
 const (
 	STARTED  WorkflowState = iota
+	FAILED   WorkflowState = iota
 	FINISHED WorkflowState = iota
 )
 
@@ -76,11 +79,13 @@ func (s *Service) CreateWorkflow(workflowName string, variables map[string]inter
 	}
 }
 
-func (s *Service) StartExecution(workflow *Workflow, currentStage string) *Execution {
+func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage string) *Execution {
 	now := uint64(time.Now().UnixNano())
 	execution := Execution{
-		ID:    uuid.New().String(),
-		Stage: currentStage,
+		ID:         uuid.New().String(),
+		FromStage:  fromStage,
+		Stage:      currentStage,
+		Checkpoint: -1,
 		Metadata: ExecutionMetadata{
 			Version: 0,
 			Started: now,
@@ -94,6 +99,10 @@ func (s *Service) StartExecution(workflow *Workflow, currentStage string) *Execu
 	}
 	workflow.Metadata.Updated = now
 	return &execution
+}
+
+func (s *Service) SetCheckpoint(execution *Execution, checkpoint int) {
+	execution.Checkpoint = checkpoint
 }
 
 func (s *Service) FinishExecution(workflow *Workflow, execution *Execution, workflowState WorkflowState) error {

@@ -99,6 +99,10 @@ func (s Service) AvailableStates(stateMachineID string, currentState string) []s
 	return availableTransitions
 }
 
+func (s Service) OriginState() string {
+	return originState()
+}
+
 // InitialState returns the initial state of a state machine
 func (s Service) InitialState(stateMachineID string) string {
 	stateMachine := s.stateMachines[stateMachineID]

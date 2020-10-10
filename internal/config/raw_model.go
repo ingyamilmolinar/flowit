@@ -15,7 +15,7 @@ type rawMainDefinition struct {
 }
 
 type rawConfig struct {
-	AbortOnFailedAction *bool `mapstructure:"abort-on-failed-action"`
+	CheckpointExecution *bool `mapstructure:"checkpoint-execution"`
 	Shell               *string
 }
 

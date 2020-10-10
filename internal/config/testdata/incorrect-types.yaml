@@ -3,7 +3,7 @@ flowit:
 
   config:
     # The following line is invalid. Should be a boolean
-    abort-on-failed-action: "true"
+    checkpoint-execution: "true"
     # The following line is invalid. Should be a string
     shell: 12345
 
