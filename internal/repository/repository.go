@@ -71,7 +71,6 @@ func (rs Service) PutWorkflow(workflow w.Workflow) error {
 
 // DeleteWorkflow takes a workflowName and workflowID and removes the workflow from the DB
 // If the workflow or bucket does not exist, an error is returned
-// TODO: Type alias
 func (rs Service) DeleteWorkflow(workflowName, workflowID string) error {
 	db, err := openDB()
 	if err != nil {
@@ -139,7 +138,6 @@ func (rs Service) GetWorkflowFromPreffix(workflowName, workflowPreffix string) (
 // GetWorkflow takes a workflowName and workflowID and returns the workflow which ID exactly matches the workflowID
 // wrapped in an optional.
 // If no workflow is found or the bucket does not exist, an empty optional is returned
-// TODO: Type alias
 func (rs Service) GetWorkflow(workflowName, workflowID string) (w.OptionalWorkflow, error) {
 	db, err := openDB()
 	if err != nil {
@@ -179,7 +177,6 @@ func (rs Service) GetWorkflow(workflowName, workflowID string) (w.OptionalWorkfl
 // GetWorkflows takes a workflowName, an integer 'n' and whether or not inactive workflows are excluded
 // and returns a list of 'n' workflows that match the criteria.
 // If n is 0, all existing workflows that match the criteria are returned
-// TODO: Make the filtering flexible
 func (rs Service) GetWorkflows(workflowName string, n int, excludeInactive bool) ([]w.Workflow, error) {
 	db, err := openDB()
 	if err != nil {

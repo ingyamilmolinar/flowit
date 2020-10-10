@@ -32,6 +32,7 @@ type RepositoryService interface {
 
 type WorkflowService interface {
 	CreateWorkflow(workflowName string, variables map[string]interface{}) *w.Workflow
+	CancelWorkflow(workflow *w.Workflow)
 	StartExecution(workflow *w.Workflow, fromStage, currentState string) *w.Execution
 	SetCheckpoint(execution *w.Execution, checkpoint int)
 	FinishExecution(workflow *w.Workflow, execution *w.Execution, workflowState w.WorkflowState) error
@@ -322,13 +323,19 @@ func (s Service) generateCancelCommand(workflowName string) command {
 
 					// We are sure optionalWorkflowID is always wrapping a workflowID
 					workflowID, _ := optionalWorkflowID.Get()
-					// TODO: CancelWorkflow
-					err = s.repositoryService.DeleteWorkflow(workflowName, workflowID)
-					if err == nil {
-						io.Println("Workflow with ID: " + workflowID + " was cancelled")
+					workflowOptional, err := s.repositoryService.GetWorkflow(workflowName, workflowID)
+					if err != nil {
+						return errors.WithStack(err)
 					}
-					return errors.WithStack(err)
-
+					workflow, err := workflowOptional.Get()
+					if err != nil {
+						return errors.WithStack(err)
+					}
+					s.workflowService.CancelWorkflow(&workflow)
+					if err := s.repositoryService.PutWorkflow(workflow); err != nil {
+						return errors.WithStack(err)
+					}
+					return io.Println("Workflow with ID: " + workflowID + " was cancelled")
 				}
 			}(workflowName),
 		},

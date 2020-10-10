@@ -79,6 +79,14 @@ func (s *Service) CreateWorkflow(workflowName string, variables map[string]inter
 	}
 }
 
+// CancelWorkflow marks workflow as cancelled
+func (s *Service) CancelWorkflow(w *Workflow) {
+	now := uint64(time.Now().UnixNano())
+	w.IsActive = false
+	w.Metadata.Updated = now
+	w.Metadata.Finished = now
+}
+
 func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage string) *Execution {
 	now := uint64(time.Now().UnixNano())
 	execution := Execution{
