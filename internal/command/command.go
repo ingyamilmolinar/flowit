@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -8,6 +9,7 @@ import (
 	"github.com/yamil-rivera/flowit/internal/config"
 	"github.com/yamil-rivera/flowit/internal/io"
 	"github.com/yamil-rivera/flowit/internal/utils"
+	"github.com/yamil-rivera/flowit/internal/workflow"
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
@@ -27,13 +29,12 @@ type RepositoryService interface {
 	GetWorkflows(workflowName string, count int, excludeInactive bool) ([]w.Workflow, error)
 	GetWorkflowFromPreffix(workflowName, workflowIDPreffix string) (w.OptionalWorkflow, error)
 	PutWorkflow(workflow w.Workflow) error
-	DeleteWorkflow(workflowName, workflowID string) error
 }
 
 type WorkflowService interface {
 	CreateWorkflow(workflowName string, variables map[string]interface{}) *w.Workflow
 	CancelWorkflow(workflow *w.Workflow)
-	StartExecution(workflow *w.Workflow, fromStage, currentState string) *w.Execution
+	StartExecution(workflow *w.Workflow, fromStage, currentState string, args []string) *w.Execution
 	SetCheckpoint(execution *w.Execution, checkpoint int)
 	FinishExecution(workflow *w.Workflow, execution *w.Execution, workflowState w.WorkflowState) error
 	AddVariables(workflow *w.Workflow, variables map[string]interface{})
@@ -182,22 +183,24 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 					workflow = &wf
 				}
 
+				fromStageID := s.fsmService.OriginState()
+				if workflow.LatestExecution != nil {
+					fromStageID = workflow.LatestExecution.Stage
+				}
+				stage, _ := s.workflowDefinition.Stage(workflowName, stageID)
+
 				checkpoint := 0
-				// TODO: This should only apply if the arguments are the same
 				if workflow.LatestExecution != nil && s.workflowDefinition.Flowit.Config.CheckpointExecution {
 					lastExecution := workflow.LatestExecution
+					if lastExecution.Failed && !utils.CompareSlices(lastExecution.Args, args) {
+						return errors.New(fmt.Sprintf("Arguments: %+v do not match with last failed execution arguments: %+v", args, lastExecution.Args))
+					}
 					if lastExecution.Checkpoint >= 0 {
 						checkpoint = lastExecution.Checkpoint
 					}
 				}
 
-				fromStageID := s.fsmService.OriginState()
-				if workflow.LatestExecution != nil {
-					fromStageID = workflow.LatestExecution.Stage
-				}
-
-				execution := s.workflowService.StartExecution(workflow, fromStageID, stageID)
-				stage, _ := s.workflowDefinition.Stage(workflowName, stageID)
+				execution := s.workflowService.StartExecution(workflow, fromStageID, stageID, args)
 
 				if len(stage.Args) > 0 {
 					variables := make(map[string]interface{})
@@ -211,33 +214,13 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 					s.workflowService.AddVariables(workflow, variables)
 				}
 
-				if len(stage.Conditions) > 0 {
-					io.Println("Running conditions...")
-					out, _, err := s.runtimeService.Execute(stage.Conditions, workflow.Variables, 0)
-					io.Println(strings.Join(utils.MergeSlices(stage.Conditions, out), "\n"))
-					if err != nil {
-						return errors.WithStack(err)
-					}
-				}
-
-				io.Println("Running actions...")
-				out, failedActionIdx, err := s.runtimeService.Execute(stage.Actions, workflow.Variables, checkpoint)
-				if err != nil {
-					io.Println(strings.Join(utils.MergeSlices(stage.Actions[checkpoint:failedActionIdx], out), "\n"))
-					if s.workflowDefinition.Flowit.Config.CheckpointExecution {
-						s.workflowService.SetCheckpoint(execution, failedActionIdx)
-						io.Println("Checkpoint set on command: ", stage.Actions[failedActionIdx])
-						execution.Stage = execution.FromStage
-						if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
-							return errors.WithStack(err)
-						}
-						if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
-							return errors.WithStack(err)
-						}
-					}
+				if err := s.runConditions(stage.Conditions, workflow.Variables); err != nil {
 					return errors.WithStack(err)
 				}
-				io.Println(strings.Join(utils.MergeSlices(stage.Actions[checkpoint:], out), "\n"))
+
+				if err := s.runActions(workflow, execution, stage.Actions, workflow.Variables, checkpoint); err != nil {
+					return errors.WithStack(err)
+				}
 
 				isFinal := s.fsmService.IsFinalState(workflowName, stageID)
 				workflowState := w.STARTED
@@ -380,4 +363,36 @@ func (s Service) getWorkflowIDFromName(workflowName, workflowPreffix string) (st
 	}
 
 	return workflow.ID, nil
+}
+
+func (s Service) runConditions(conditions []string, variables map[string]interface{}) error {
+	if len(conditions) > 0 {
+		io.Println("Running conditions...")
+		out, _, err := s.runtimeService.Execute(conditions, variables, 0)
+		io.Println(strings.Join(utils.MergeSlices(conditions, out), "\n"))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
+}
+
+func (s Service) runActions(workflow *workflow.Workflow, execution *workflow.Execution, actions []string, variables map[string]interface{}, checkpoint int) error {
+	io.Println("Running actions...")
+	out, failedActionIdx, err := s.runtimeService.Execute(actions, variables, checkpoint)
+	if err != nil {
+		io.Println(strings.Join(utils.MergeSlices(actions[checkpoint:failedActionIdx], out), "\n"))
+		if s.workflowDefinition.Flowit.Config.CheckpointExecution {
+			s.workflowService.SetCheckpoint(execution, failedActionIdx)
+			io.Println("Checkpoint set on command: ", actions[failedActionIdx])
+			if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
+				return errors.WithStack(err)
+			}
+			if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+		return errors.WithStack(err)
+	}
+	return io.Println(strings.Join(utils.MergeSlices(actions[checkpoint:], out), "\n"))
 }

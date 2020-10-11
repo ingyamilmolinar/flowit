@@ -32,7 +32,9 @@ type Execution struct {
 	ID         string
 	FromStage  string
 	Stage      string
+	Args       []string
 	Checkpoint int
+	Failed     bool
 	Metadata   ExecutionMetadata
 }
 
@@ -66,7 +68,6 @@ func NewService() *Service {
 // CreateWorkflow creates a new Workflow with a name and a variable map as inputs
 func (s *Service) CreateWorkflow(workflowName string, variables map[string]interface{}) *Workflow {
 	workflowID := uuid.New().String()
-
 	return &Workflow{
 		ID:        workflowID,
 		Preffix:   workflowID[:6],
@@ -80,6 +81,7 @@ func (s *Service) CreateWorkflow(workflowName string, variables map[string]inter
 }
 
 // CancelWorkflow marks workflow as cancelled
+// TODO: Unit test
 func (s *Service) CancelWorkflow(w *Workflow) {
 	now := uint64(time.Now().UnixNano())
 	w.IsActive = false
@@ -87,12 +89,13 @@ func (s *Service) CancelWorkflow(w *Workflow) {
 	w.Metadata.Finished = now
 }
 
-func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage string) *Execution {
+func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage string, args []string) *Execution {
 	now := uint64(time.Now().UnixNano())
 	execution := Execution{
 		ID:         uuid.New().String(),
 		FromStage:  fromStage,
 		Stage:      currentStage,
+		Args:       args,
 		Checkpoint: -1,
 		Metadata: ExecutionMetadata{
 			Version: 0,
@@ -119,6 +122,10 @@ func (s *Service) FinishExecution(workflow *Workflow, execution *Execution, work
 	}
 	now := uint64(time.Now().UnixNano())
 	execution.Metadata.Finished = now
+	if workflowState == FAILED {
+		execution.Failed = true
+		execution.Stage = execution.FromStage
+	}
 	workflow.IsActive = workflowState != FINISHED
 	workflow.Metadata.Updated = now
 	if workflowState == FINISHED {

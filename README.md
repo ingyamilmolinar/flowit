@@ -41,7 +41,7 @@ Number describing to which specification version this particular workflow defini
 
 #### Config (Optional)
 The workflow designer can tweek `flowit` behavior to address their specific needs.
-- `checkpoint-execution`: Wether or not to abort a workflow stage if an action command returns a non zero status code. The default is `true`.
+- `checkpoint-execution`: Wether or not to save a workflow stage state if an action command returns a non zero status code. This will allow for resuming the stage execution from the failed command skipping the successfully executed commands of the previous failed execution. The default is `true`.
 - `shell`: Location of the executable shell in which the stage `conditions` and `actions` commands will run. It defaults to the default shell. This value is OS dependent.
 ```yaml
   config:

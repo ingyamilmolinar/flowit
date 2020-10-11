@@ -24,11 +24,13 @@ func FindStringInArray(s string, arr []string) bool {
 	return found
 }
 
+// MergeSlices takes two string lists and merge them into a single list
+// TODO: Unit test
 func MergeSlices(a, b []string) []string {
 	var result []string
 	sizeA := len(a)
 	sizeB := len(b)
-	maxSize := maxInt(sizeA, sizeB)
+	maxSize := MaxInt(sizeA, sizeB)
 	for i := 0; i < maxSize; i++ {
 		if i < sizeA {
 			result = append(result, a[i])
@@ -40,9 +42,26 @@ func MergeSlices(a, b []string) []string {
 	return result
 }
 
-func maxInt(a, b int) int {
+// MaxInt returns the maximum of two integers
+func MaxInt(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
+}
+
+// CompareSlices returns true if the slices are equal length with equal elements
+// TODO: Unit test
+func CompareSlices(a, b []string) bool {
+	sizeA := len(a)
+	sizeB := len(b)
+	if sizeA != sizeB {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
