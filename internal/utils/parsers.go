@@ -7,7 +7,7 @@ import (
 )
 
 const variableNamingRegexPattern = `([a-zA-Z0-9\-\_]+)`
-const descriptionNamingRegexPattern = `([A-Z]+[a-zA-Z0-9\-\_ ]*)`
+const descriptionNamingRegexPattern = `([a-zA-Z]+[a-zA-Z0-9\-\_ ]*)`
 const variableDeclarationRegexPattern = `^< *` + variableNamingRegexPattern + ` *\| *` + descriptionNamingRegexPattern + ` *>$`
 const variableReferenceRegexPattern = `\$<` + variableNamingRegexPattern + `>`
 

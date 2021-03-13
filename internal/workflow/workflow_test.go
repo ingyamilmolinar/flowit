@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/google/uuid"
+	"github.com/yamil-rivera/flowit/internal/config"
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
@@ -14,14 +15,44 @@ var _ = Describe("Workflow", func() {
 
 	service := w.NewService()
 
+	wd := config.Flowit{
+		Version: "1",
+		Config: config.Config{
+			CheckpointExecution: true,
+			Shell:               "bash",
+		},
+		Variables: map[string]interface{}{
+			"variable": "value",
+		},
+		StateMachines: []config.StateMachine{
+			{
+				ID: "id",
+				Stages: []string{
+					"stage-1",
+					"stage-2",
+				},
+				InitialStage: "stage-1",
+				FinalStages: []string{
+					"stage-2",
+				},
+				Transitions: []config.StateMachineTransition{
+					{
+						From: []string{
+							"stage-1",
+						},
+						To: []string{
+							"stage-2",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	Context("Creating Workflow", func() {
 
 		It("should create a new workflow successfully", func() {
-
-			variables := map[string]interface{}{
-				"variable": "value",
-			}
-			workflow := service.CreateWorkflow("my-workflow", variables)
+			workflow := service.CreateWorkflow("my-workflow", wd)
 
 			id, err := uuid.Parse(workflow.ID)
 			Expect(err).To(BeNil())
@@ -30,7 +61,7 @@ var _ = Describe("Workflow", func() {
 			Expect(workflow.IsActive).To(BeFalse())
 			Expect(len(workflow.Executions)).To(Equal(0))
 			Expect(workflow.LatestExecution).To(BeNil())
-			Expect(workflow.Variables).To(Equal(variables))
+			Expect(workflow.State).To(Equal(wd))
 
 			Expect(workflow.Metadata.Started).To(Equal(uint64(0)))
 			Expect(workflow.Metadata.Updated).To(Equal(uint64(0)))
@@ -45,13 +76,13 @@ var _ = Describe("Workflow", func() {
 
 		It("should start a new workflow execution successfully", func() {
 
-			variables := map[string]interface{}{
+			wd.Variables = map[string]interface{}{
 				"variable": "value",
 			}
 			args := []string{
 				"arg-1",
 			}
-			workflow := service.CreateWorkflow("my-workflow", variables)
+			workflow := service.CreateWorkflow("my-workflow", wd)
 
 			// start first execution
 			before := time.Now()
@@ -65,7 +96,7 @@ var _ = Describe("Workflow", func() {
 			Expect(workflow.Preffix).To(Equal(workflowID[:6]))
 			Expect(workflow.Name).To(Equal("my-workflow"))
 			Expect(workflow.IsActive).To(BeTrue())
-			Expect(workflow.Variables).To(Equal(variables))
+			Expect(workflow.State).To(Equal(wd))
 			started := workflow.Metadata.Started
 			Expect(workflow.Metadata.Started).To(BeNumerically(">=", uint64(before.UnixNano())))
 			Expect(workflow.Metadata.Started).To(BeNumerically("<=", uint64(after.UnixNano())))
@@ -122,7 +153,7 @@ var _ = Describe("Workflow", func() {
 
 		It("should finish an active workflow execution successfully", func() {
 
-			workflow := service.CreateWorkflow("my-workflow", nil)
+			workflow := service.CreateWorkflow("my-workflow", wd)
 
 			// start and finish execution
 			execution := service.StartExecution(workflow, "origin", "stage-1", nil)
@@ -141,7 +172,7 @@ var _ = Describe("Workflow", func() {
 
 		It("should finish a final workflow execution successfully", func() {
 
-			workflow := service.CreateWorkflow("my-workflow", nil)
+			workflow := service.CreateWorkflow("my-workflow", wd)
 
 			// start and finish execution
 			execution := service.StartExecution(workflow, "origin", "stage-1", nil)
@@ -160,7 +191,7 @@ var _ = Describe("Workflow", func() {
 
 		It("should fail if an already terminated workflow execution is finished", func() {
 
-			workflow := service.CreateWorkflow("my-workflow", nil)
+			workflow := service.CreateWorkflow("my-workflow", wd)
 
 			execution := service.StartExecution(workflow, "origin", "stage-1", nil)
 			err := service.FinishExecution(workflow, execution, w.STARTED)

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/pkg/errors"
@@ -217,6 +218,46 @@ func (rs Service) GetWorkflows(workflowName string, n int, excludeInactive bool)
 					" is greater than the number of items: " + strconv.Itoa(n-count))
 			}
 			return nil
+		}); err != nil {
+		return workflows, errors.Wrap(err, "Error within happened within transaction")
+	}
+	if copied {
+		return workflows, nil
+	}
+	return nil, nil
+}
+
+// TODO: Unit test
+func (rs Service) GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error) {
+	db, err := openDB()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer closeDB(db)
+
+	var workflows []w.Workflow
+	var copied bool
+	if err := db.View(
+		func(tx *bolt.Tx) error {
+			return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+				if strings.HasPrefix(string(name), "workflows_") {
+					if err := b.ForEach(func(k, v []byte) error {
+						w, err := decodeWorkflow(v)
+						if err != nil {
+							return errors.WithStack(err)
+						}
+						if !excludeInactive || w.IsActive {
+							workflows = append(workflows, *w)
+							copied = true
+						}
+						return nil
+					}); err != nil {
+						return errors.WithStack(err)
+					}
+					return nil
+				}
+				return nil
+			})
 		}); err != nil {
 		return workflows, errors.Wrap(err, "Error within happened within transaction")
 	}

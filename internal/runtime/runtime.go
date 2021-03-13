@@ -5,30 +5,61 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/config"
+	"github.com/yamil-rivera/flowit/internal/fsm"
 	"github.com/yamil-rivera/flowit/internal/utils"
+	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
 type Service struct {
-	executor Executor
+	repositoryService RepositoryService
+	fsmServiceFactory fsm.FsmServiceFactory
+	workflowService   WorkflowService
+}
+
+type RepositoryService interface {
+	GetWorkflow(workflowName, workflowID string) (w.OptionalWorkflow, error)
+	GetWorkflows(workflowName string, count int, excludeInactive bool) ([]w.Workflow, error)
+	GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error)
+	GetWorkflowFromPreffix(workflowName, workflowIDPreffix string) (w.OptionalWorkflow, error)
+	PutWorkflow(workflow w.Workflow) error
+}
+
+type WorkflowService interface {
+	CreateWorkflow(workflowName string, definition config.Flowit) *w.Workflow
+	CancelWorkflow(workflow *w.Workflow)
+	StartExecution(workflow *w.Workflow, fromStage, currentState string, args []string) *w.Execution
+	SetCheckpoint(execution *w.Execution, checkpoint int)
+	FinishExecution(workflow *w.Workflow, execution *w.Execution, workflowState w.WorkflowState) error
+	AddVariables(workflow *w.Workflow, variables map[string]interface{})
+}
+
+type Writer interface {
+	Write(s string) error
 }
 
 type Executor interface {
+	Config(shell string)
 	Execute(command string) (string, error)
-}
-
-func NewService(executor Executor) *Service {
-	return &Service{executor}
-}
-
-func NewUnixShellExecutor(shell string) Executor {
-	return UnixShellExecutor{shell}
 }
 
 type UnixShellExecutor struct {
 	shell string
 }
 
-func (e UnixShellExecutor) Execute(command string) (string, error) {
+func NewService(rs RepositoryService, fsf fsm.FsmServiceFactory, ws WorkflowService) *Service {
+	return &Service{rs, fsf, ws}
+}
+
+func NewUnixShellExecutor() Executor {
+	return &UnixShellExecutor{}
+}
+
+func (e *UnixShellExecutor) Config(shell string) {
+	e.shell = shell
+}
+
+func (e *UnixShellExecutor) Execute(command string) (string, error) {
 	shellArgs := strings.Split(e.shell, " ")
 	mainCommand := shellArgs[0]
 	restOfArgs := append(shellArgs[1:], "-c", command)
@@ -41,34 +72,167 @@ func (e UnixShellExecutor) Execute(command string) (string, error) {
 	return trimmedOut, nil
 }
 
-func (s *Service) Execute(commands []string, variables map[string]interface{}, checkpoint int) ([]string, int, error) {
-
-	out, i, err := s.runCommands(commands[checkpoint:], variables)
+func (s *Service) Run(optionalWorkflowPreffix utils.OptionalString, args []string, workflowName, stageID string, workflowDefinition config.Flowit, executor Executor, writer Writer) error {
+	var workflow *w.Workflow
+	if !optionalWorkflowPreffix.IsSet() {
+		workflow = s.workflowService.CreateWorkflow(workflowName, workflowDefinition)
+		writer.Write("Workflow with ID: " + workflow.ID + " was created")
+	} else {
+		workflowPreffix, _ := optionalWorkflowPreffix.Get()
+		optionalWorkflow, _ := s.repositoryService.GetWorkflowFromPreffix(workflowName, workflowPreffix)
+		wf, _ := optionalWorkflow.Get()
+		workflow = &wf
+	}
+	fsmService, err := s.fsmServiceFactory.NewFsmService(workflow.State)
 	if err != nil {
-		return out, i + checkpoint, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	return out, 0, nil
+	fromStageID := fsmService.OriginState()
+	if workflow.LatestExecution != nil {
+		fromStageID = workflow.LatestExecution.Stage
+	}
+
+	stage := workflow.Stage(stageID)
+	if !fsmService.IsTransitionValid(workflow.StateMachineID(), fromStageID, stage.ID) {
+		return errors.Errorf("Invalid transition from %s to %s", fromStageID, stageID)
+	}
+
+	checkpoint := 0
+	if workflow.LatestExecution != nil && workflow.State.Config.CheckpointExecution {
+		lastExecution := workflow.LatestExecution
+		if lastExecution.Failed && !utils.CompareSlices(lastExecution.Args, args) {
+			return errors.Errorf("Arguments: %+v do not match with last failed execution arguments: %+v", args, lastExecution.Args)
+		}
+		if lastExecution.Checkpoint >= 0 {
+			checkpoint = lastExecution.Checkpoint
+		}
+	}
+
+	execution := s.workflowService.StartExecution(workflow, fromStageID, stageID, args)
+
+	if len(stage.Args) > 0 {
+		if len(args) != len(stage.Args) {
+			return errors.Errorf("Wrong number of arguments provided. Expected %d but got %d.", len(stage.Args), len(args))
+		}
+		variables := make(map[string]interface{})
+		for i, arg := range stage.Args {
+			variable, err := utils.ExtractVariableNameFromVariableDeclaration(arg)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			variables[variable] = args[i]
+		}
+		s.workflowService.AddVariables(workflow, variables)
+	}
+
+	// Set executor for this run based on workflow state
+	executor.Config(workflow.State.Config.Shell)
+
+	err = s.runConditions(stage.Conditions, workflow.State.Variables, executor, writer)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	err = s.runActions(workflow, execution, stage.Actions, workflow.State.Variables, workflow.State.Config.CheckpointExecution, checkpoint, executor, writer)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	stateMachineID := workflow.StateMachineID()
+	isFinal := fsmService.IsFinalState(stateMachineID, stageID)
+	workflowState := w.STARTED
+	if isFinal {
+		workflowState = w.FINISHED
+	}
+	err = s.workflowService.FinishExecution(workflow, execution, workflowState)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
-func (s Service) runCommands(commands []string, variables map[string]interface{}) ([]string, int, error) {
+func (s *Service) Cancel(optionalWorkflowID utils.OptionalString, args []string, workflowName string, writer Writer) error {
+	// We are sure optionalWorkflowID is always wrapping a workflowID
+	workflowID, _ := optionalWorkflowID.Get()
+	workflowOptional, err := s.repositoryService.GetWorkflow(workflowName, workflowID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	workflow, err := workflowOptional.Get()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	s.workflowService.CancelWorkflow(&workflow)
+	if err := s.repositoryService.PutWorkflow(workflow); err != nil {
+		return errors.WithStack(err)
+	}
+	writer.Write("Workflow with ID: " + workflow.ID + " was cancelled")
+	return nil
+}
+
+func (s Service) execute(commands []string, variables map[string]interface{}, checkpoint int, executor Executor, writer Writer) (int, error) {
+
+	i, err := s.runCommands(commands[checkpoint:], variables, executor, writer)
+	if err != nil {
+		return i + checkpoint, errors.WithStack(err)
+	}
+	return 0, nil
+}
+
+func (s Service) runCommands(commands []string, variables map[string]interface{}, executor Executor, writer Writer) (int, error) {
 
 	if len(commands) == 0 {
-		return nil, 0, nil
+		return 0, nil
 	}
 
-	var outs []string
 	for i, command := range commands {
 		parsedCommand, err := utils.EvaluateVariablesInExpression(command, variables)
 		if err != nil {
-			return outs, i, errors.Wrap(err, "Error evaluating variables in command: "+command)
+			return i, errors.Wrap(err, "Error evaluating variables in command: "+command)
 		}
-		out, err := s.executor.Execute(parsedCommand)
-		outs = append(outs, out)
+		out, err := executor.Execute(parsedCommand)
+		writer.Write(out)
 		if err != nil {
-			return outs, i, errors.Wrap(err, "Error executing command: "+parsedCommand)
+			return i, errors.Wrap(err, "Error executing command: "+parsedCommand)
 		}
 	}
+	return 0, nil
+}
 
-	return outs, 0, nil
+func (s Service) runConditions(conditions []string, variables map[string]interface{}, executor Executor, writer Writer) error {
+	if len(conditions) > 0 {
+		writer.Write("Running conditions...")
+		_, err := s.execute(conditions, variables, 0, executor, writer)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
+}
+
+func (s Service) runActions(workflow *w.Workflow, execution *w.Execution, actions []string, variables map[string]interface{}, checkpointEnabled bool, checkpoint int, executor Executor, writer Writer) error {
+	writer.Write("Running actions...")
+	failedActionIdx, err := s.execute(actions, variables, checkpoint, executor, writer)
+	if err != nil {
+		// TOFIX:
+		// stdout = append(stdout, utils.MergeSlices(actions[checkpoint:failedActionIdx], out)...)
+		if checkpointEnabled {
+			s.workflowService.SetCheckpoint(execution, failedActionIdx)
+			writer.Write("Checkpoint set on command: " + actions[failedActionIdx])
+			if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
+				return errors.WithStack(err)
+			}
+			if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+		return errors.WithStack(err)
+	}
+	// TOFIX:
+	// stdout = append(stdout, utils.MergeSlices(actions[checkpoint:], out)...)
+	return nil
 }

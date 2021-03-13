@@ -2,50 +2,35 @@ package command
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/yamil-rivera/flowit/internal/config"
+	"github.com/yamil-rivera/flowit/internal/fsm"
 	"github.com/yamil-rivera/flowit/internal/io"
+	"github.com/yamil-rivera/flowit/internal/runtime"
 	"github.com/yamil-rivera/flowit/internal/utils"
-	"github.com/yamil-rivera/flowit/internal/workflow"
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
 type RuntimeService interface {
-	Execute(commands []string, variables map[string]interface{}, checkpoint int) ([]string, int, error)
-}
-
-type FsmService interface {
-	OriginState() string
-	InitialState(stateMachineID string) string
-	AvailableStates(stateMachineID string, state string) []string
-	IsFinalState(stateMachineID, state string) bool
+	Run(optionalWorkflowID utils.OptionalString, args []string, workflowName, stageID string, workflowDefinition config.Flowit, executor runtime.Executor, writer runtime.Writer) error
+	Cancel(optionalWorkflowID utils.OptionalString, args []string, workflowName string, writer runtime.Writer) error
 }
 
 type RepositoryService interface {
 	GetWorkflow(workflowName, workflowID string) (w.OptionalWorkflow, error)
 	GetWorkflows(workflowName string, count int, excludeInactive bool) ([]w.Workflow, error)
+	GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error)
 	GetWorkflowFromPreffix(workflowName, workflowIDPreffix string) (w.OptionalWorkflow, error)
 	PutWorkflow(workflow w.Workflow) error
-}
-
-type WorkflowService interface {
-	CreateWorkflow(workflowName string, variables map[string]interface{}) *w.Workflow
-	CancelWorkflow(workflow *w.Workflow)
-	StartExecution(workflow *w.Workflow, fromStage, currentState string, args []string) *w.Execution
-	SetCheckpoint(execution *w.Execution, checkpoint int)
-	FinishExecution(workflow *w.Workflow, execution *w.Execution, workflowState w.WorkflowState) error
-	AddVariables(workflow *w.Workflow, variables map[string]interface{})
 }
 
 type Service struct {
 	rootCommand        *cobra.Command
 	runtimeService     RuntimeService
-	fsmService         FsmService
+	fsmServiceFactory  fsm.FsmServiceFactory
 	repositoryService  RepositoryService
-	workflowService    WorkflowService
 	workflowDefinition *config.WorkflowDefinition
 }
 
@@ -54,57 +39,68 @@ type command struct {
 	subcommands []command
 }
 
-func NewService(run RuntimeService, fsm FsmService, repo RepositoryService, wf WorkflowService, wd *config.WorkflowDefinition) *Service {
-	return &Service{nil, run, fsm, repo, wf, wd}
+func NewService(run RuntimeService, fsf fsm.FsmServiceFactory, repo RepositoryService, wd *config.WorkflowDefinition) *Service {
+	return &Service{nil, run, fsf, repo, wd}
 }
 
 // RegisterCommands registers all commands and subcommands based on the provided configuration
+// and previous active workflows
 func (s *Service) RegisterCommands(version string) error {
 
+	var mainCommands []command
+	fsmService, err := s.fsmServiceFactory.NewFsmService(s.workflowDefinition.Flowit)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	workflowDefinitions := s.workflowDefinition.Flowit.Workflows
-	mainCommands := make([]command, len(workflowDefinitions)+1)
-	for i, workflowDefinition := range workflowDefinitions {
+	for _, workflowDefinition := range workflowDefinitions {
 
 		workflowName := workflowDefinition.ID
-		mainCommands[i].cobra = newContainerCommand(workflowName)
-		activeWorkflows, err := s.getAllActiveWorkflows(workflowName)
-
+		stateMachine := workflowDefinition.StateMachine
+		cmd := command{}
+		cmd.cobra = newContainerCommand(workflowName)
+		initialStages, err := s.generateInitialCommands(fsmService, stateMachine, workflowName)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
-		if len(activeWorkflows) > 0 {
-
-			mainCommands[i].subcommands = make([]command, len(activeWorkflows))
-			for j, activeWorkflow := range activeWorkflows {
-
-				mainCommands[i].subcommands[j].cobra = newContainerCommand(activeWorkflow.Preffix)
-				stages, err := s.generatePossibleCommands(workflowName, activeWorkflow.ID)
-				if err != nil {
-					return errors.Wrap(err, "Error generating possible commands")
-				}
-
-				mainCommands[i].subcommands[j].subcommands = stages
-			}
-
-			initialStages, err := s.generateInitialCommands(workflowName)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			mainCommands[i].subcommands = append(mainCommands[i].subcommands, initialStages...)
-		} else {
-
-			initialStages, err := s.generateInitialCommands(workflowName)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			mainCommands[i].subcommands = initialStages
-		}
+		cmd.subcommands = initialStages
+		mainCommands = append(mainCommands, cmd)
 	}
 
-	mainCommands[len(workflowDefinitions)].cobra = newSimpleCommand("version", version)
+	activeWorkflows, err := s.getAllActiveWorkflows()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, workflow := range activeWorkflows {
+		childCmd := command{}
+		childCmd.cobra = newContainerCommand(workflow.Preffix)
+		stages, err := s.generatePossibleCommands(workflow)
+		if err != nil {
+			return errors.Wrap(err, "Error generating possible commands")
+		}
+		childCmd.subcommands = stages
+
+		// Check if we already have a registered command for this workflow name
+		var cmd *command
+		var found bool
+		for _, mainCmd := range mainCommands {
+			if mainCmd.cobra.Use == workflow.Name {
+				cmd = &mainCmd
+				found = true
+			}
+		}
+
+		if !found {
+			cmd = &command{}
+			cmd.cobra = newContainerCommand(workflow.Name)
+		}
+		cmd.subcommands = append(cmd.subcommands, childCmd)
+		mainCommands = replaceCommand(mainCommands, *cmd)
+	}
+
+	cmd := command{}
+	cmd.cobra = newSimpleCommand("version", version)
+	mainCommands = append(mainCommands, cmd)
 
 	rootCommand := &cobra.Command{
 		Use:   "flowit",
@@ -133,8 +129,12 @@ func (s Service) Execute() error {
 	return nil
 }
 
-func (s Service) getAllActiveWorkflows(workflowName string) ([]w.Workflow, error) {
+func (s Service) getAllActiveWorkflowsByName(workflowName string) ([]w.Workflow, error) {
 	return s.repositoryService.GetWorkflows(workflowName, 0, true)
+}
+
+func (s Service) getAllActiveWorkflows() ([]w.Workflow, error) {
+	return s.repositoryService.GetAllWorkflows(true)
 }
 
 func newContainerCommand(commandUse string) *cobra.Command {
@@ -152,12 +152,40 @@ func newSimpleCommand(commandUse string, commandRun string) *cobra.Command {
 	}
 }
 
+// TODO: Add arguments description to command help
 func newStageCommand(use string, args int, run func(cmd *cobra.Command, args []string) error) *cobra.Command {
 	return &cobra.Command{
 		Use:  use,
 		Args: cobra.ExactArgs(args),
 		RunE: run,
 	}
+}
+
+func (s Service) generateCommandsFromStagesForWorkflow(workflow w.Workflow, stages []string) ([]command, error) {
+	commands := make([]command, len(stages))
+	for i, stageID := range stages {
+
+		runFunc := func(workflowName string, stageID string) func(cmd *cobra.Command, args []string) error {
+
+			return func(cmd *cobra.Command, args []string) error {
+				optionalWorkflowID, err := s.getWorkflowIDFromCommand(cmd)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+				err = s.runtimeService.Run(optionalWorkflowID, args, workflowName, stageID, s.workflowDefinition.Flowit, runtime.NewUnixShellExecutor(), io.NewConsoleWriter())
+				return err
+			}
+
+		}(workflow.Name, stageID)
+
+		stage, err := stage(workflow, workflow.Name, stageID)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		commands[i].cobra = newStageCommand(stage.ID, len(stage.Args), runFunc)
+
+	}
+	return commands, nil
 }
 
 func (s Service) generateCommandsFromStages(workflowName string, stages []string) ([]command, error) {
@@ -167,76 +195,14 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 		runFunc := func(workflowName string, stageID string) func(cmd *cobra.Command, args []string) error {
 
 			return func(cmd *cobra.Command, args []string) error {
-
 				optionalWorkflowID, err := s.getWorkflowIDFromCommand(cmd)
 				if err != nil {
 					return errors.WithStack(err)
 				}
-				var workflow *w.Workflow
-				if !optionalWorkflowID.IsSet() {
-					workflow = s.workflowService.CreateWorkflow(workflowName, s.workflowDefinition.Flowit.Variables)
-					io.Println("Workflow with ID: " + workflow.ID + " was created")
-				} else {
-					workflowID, _ := optionalWorkflowID.Get()
-					optionalWorkflow, _ := s.repositoryService.GetWorkflowFromPreffix(workflowName, workflowID)
-					wf, _ := optionalWorkflow.Get()
-					workflow = &wf
-				}
-
-				fromStageID := s.fsmService.OriginState()
-				if workflow.LatestExecution != nil {
-					fromStageID = workflow.LatestExecution.Stage
-				}
-				stage, _ := s.workflowDefinition.Stage(workflowName, stageID)
-
-				checkpoint := 0
-				if workflow.LatestExecution != nil && s.workflowDefinition.Flowit.Config.CheckpointExecution {
-					lastExecution := workflow.LatestExecution
-					if lastExecution.Failed && !utils.CompareSlices(lastExecution.Args, args) {
-						return errors.New(fmt.Sprintf("Arguments: %+v do not match with last failed execution arguments: %+v", args, lastExecution.Args))
-					}
-					if lastExecution.Checkpoint >= 0 {
-						checkpoint = lastExecution.Checkpoint
-					}
-				}
-
-				execution := s.workflowService.StartExecution(workflow, fromStageID, stageID, args)
-
-				if len(stage.Args) > 0 {
-					variables := make(map[string]interface{})
-					for i, arg := range stage.Args {
-						variable, err := utils.ExtractVariableNameFromVariableDeclaration(arg)
-						if err != nil {
-							return errors.WithStack(err)
-						}
-						variables[variable] = args[i]
-					}
-					s.workflowService.AddVariables(workflow, variables)
-				}
-
-				if err := s.runConditions(stage.Conditions, workflow.Variables); err != nil {
-					return errors.WithStack(err)
-				}
-
-				if err := s.runActions(workflow, execution, stage.Actions, workflow.Variables, checkpoint); err != nil {
-					return errors.WithStack(err)
-				}
-
-				isFinal := s.fsmService.IsFinalState(workflowName, stageID)
-				workflowState := w.STARTED
-				if isFinal {
-					workflowState = w.FINISHED
-				}
-				err = s.workflowService.FinishExecution(workflow, execution, workflowState)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-				if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
-					return errors.WithStack(err)
-				}
-				return nil
-
+				err = s.runtimeService.Run(optionalWorkflowID, args, workflowName, stageID, s.workflowDefinition.Flowit, runtime.NewUnixShellExecutor(), io.NewConsoleWriter())
+				return err
 			}
+
 		}(workflowName, stageID)
 
 		stage, err := s.workflowDefinition.Stage(workflowName, stageID)
@@ -249,9 +215,9 @@ func (s Service) generateCommandsFromStages(workflowName string, stages []string
 	return commands, nil
 }
 
-func (s Service) generateInitialCommands(workflowName string) ([]command, error) {
+func (s Service) generateInitialCommands(fsmService fsm.Service, stateMachine, workflowName string) ([]command, error) {
 
-	initialEvent := s.fsmService.InitialState(workflowName)
+	initialEvent := fsmService.InitialState(stateMachine)
 	initialEvents := []string{initialEvent}
 	commands, err := s.generateCommandsFromStages(workflowName, initialEvents)
 	if err != nil {
@@ -261,32 +227,24 @@ func (s Service) generateInitialCommands(workflowName string) ([]command, error)
 	return commands, nil
 }
 
-func (s Service) generatePossibleCommands(workflowName, workflowID string) ([]command, error) {
-
-	workflowOptional, err := s.repositoryService.GetWorkflow(workflowName, workflowID)
+func (s Service) generatePossibleCommands(workflow w.Workflow) ([]command, error) {
+	fsmService, err := s.fsmServiceFactory.NewFsmService(workflow.State)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
 	var availableStates []string
-	workflow, err := workflowOptional.Get()
-	if err == nil {
-		if workflow.LatestExecution.Checkpoint >= 0 {
-			availableStates = s.fsmService.AvailableStates(workflowName, workflow.LatestExecution.FromStage)
-		} else {
-			availableStates = s.fsmService.AvailableStates(workflowName, workflow.LatestExecution.Stage)
-		}
+	if workflow.LatestExecution.Checkpoint >= 0 {
+		availableStates = fsmService.AvailableStates(workflow.StateMachineID(), workflow.LatestExecution.FromStage)
 	} else {
-		availableState := s.fsmService.InitialState(workflowName)
-		availableStates = append(availableStates, availableState)
+		availableStates = fsmService.AvailableStates(workflow.StateMachineID(), workflow.LatestExecution.Stage)
 	}
 
-	commands, err := s.generateCommandsFromStages(workflowName, availableStates)
+	commands, err := s.generateCommandsFromStagesForWorkflow(workflow, availableStates)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	commands = append(commands, s.generateCancelCommand(workflowName))
+	commands = append(commands, s.generateCancelCommand(workflow.Name))
 	return commands, nil
 
 }
@@ -297,29 +255,16 @@ func (s Service) generateCancelCommand(workflowName string) command {
 		cobra: &cobra.Command{
 			Use: "cancel",
 			RunE: func(workflowName string) func(cmd *cobra.Command, args []string) error {
-				return func(cmd *cobra.Command, args []string) error {
 
+				return func(cmd *cobra.Command, args []string) error {
 					optionalWorkflowID, err := s.getWorkflowIDFromCommand(cmd)
 					if err != nil {
 						return errors.WithStack(err)
 					}
-
-					// We are sure optionalWorkflowID is always wrapping a workflowID
-					workflowID, _ := optionalWorkflowID.Get()
-					workflowOptional, err := s.repositoryService.GetWorkflow(workflowName, workflowID)
-					if err != nil {
-						return errors.WithStack(err)
-					}
-					workflow, err := workflowOptional.Get()
-					if err != nil {
-						return errors.WithStack(err)
-					}
-					s.workflowService.CancelWorkflow(&workflow)
-					if err := s.repositoryService.PutWorkflow(workflow); err != nil {
-						return errors.WithStack(err)
-					}
-					return io.Println("Workflow with ID: " + workflowID + " was cancelled")
+					err = s.runtimeService.Cancel(optionalWorkflowID, args, workflowName, io.NewConsoleWriter())
+					return err
 				}
+
 			}(workflowName),
 		},
 	}
@@ -365,34 +310,36 @@ func (s Service) getWorkflowIDFromName(workflowName, workflowPreffix string) (st
 	return workflow.ID, nil
 }
 
-func (s Service) runConditions(conditions []string, variables map[string]interface{}) error {
-	if len(conditions) > 0 {
-		io.Println("Running conditions...")
-		out, _, err := s.runtimeService.Execute(conditions, variables, 0)
-		io.Println(strings.Join(utils.MergeSlices(conditions, out), "\n"))
-		if err != nil {
-			return errors.WithStack(err)
+func replaceCommand(cmds []command, cmd command) []command {
+	var result []command
+	for _, c := range cmds {
+		if c.cobra.Use == cmd.cobra.Use {
+			result = append(result, cmd)
+			continue
 		}
+		result = append(result, c)
 	}
-	return nil
+	return result
 }
 
-func (s Service) runActions(workflow *workflow.Workflow, execution *workflow.Execution, actions []string, variables map[string]interface{}, checkpoint int) error {
-	io.Println("Running actions...")
-	out, failedActionIdx, err := s.runtimeService.Execute(actions, variables, checkpoint)
-	if err != nil {
-		io.Println(strings.Join(utils.MergeSlices(actions[checkpoint:failedActionIdx], out), "\n"))
-		if s.workflowDefinition.Flowit.Config.CheckpointExecution {
-			s.workflowService.SetCheckpoint(execution, failedActionIdx)
-			io.Println("Checkpoint set on command: ", actions[failedActionIdx])
-			if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
-				return errors.WithStack(err)
-			}
-			if err := s.repositoryService.PutWorkflow(*workflow); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-		return errors.WithStack(err)
+func stringifyCmd(c *command) string {
+	result := c.cobra.Name() + " "
+	for i, s := range c.subcommands {
+		result += fmt.Sprint(i) + ":" + stringifyCmd(&s)
 	}
-	return io.Println(strings.Join(utils.MergeSlices(actions[checkpoint:], out), "\n"))
+	return result
+}
+
+func stage(w w.Workflow, workflowID, stageID string) (config.Stage, error) {
+	for _, workflow := range w.State.Workflows {
+		if workflow.ID == workflowID {
+			for _, stage := range workflow.Stages {
+				if stage.ID == stageID {
+					return stage, nil
+				}
+			}
+			return config.Stage{}, errors.New("Invalid stage ID: " + stageID)
+		}
+	}
+	return config.Stage{}, errors.New("Invalid workflow ID: " + workflowID)
 }

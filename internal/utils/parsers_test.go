@@ -32,8 +32,6 @@ var _ = Describe("Utils", func() {
 			Expect(valid).To(BeFalse())
 			valid = IsValidVariableDeclaration("< my-var-without-desc | >")
 			Expect(valid).To(BeFalse())
-			valid = IsValidVariableDeclaration("< my-var | desc not starting with uppercase >")
-			Expect(valid).To(BeFalse())
 
 		})
 
@@ -78,10 +76,6 @@ var _ = Describe("Utils", func() {
 			Expect(err).To(BeNil())
 
 			variable, err = ExtractVariableNameFromVariableDeclaration("< myVar1,myVar2 | Description >")
-			Expect(variable).To(BeZero())
-			Expect(err).To(Not(BeNil()))
-
-			variable, err = ExtractVariableNameFromVariableDeclaration("< myVar | description >")
 			Expect(variable).To(BeZero())
 			Expect(err).To(Not(BeNil()))
 

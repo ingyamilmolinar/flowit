@@ -2,7 +2,16 @@ package fsm
 
 import (
 	"github.com/looplab/fsm"
+	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/config"
+	"github.com/yamil-rivera/flowit/internal/utils"
 )
+
+type FsmServiceFactory interface {
+	NewFsmService(config config.Flowit) (Service, error)
+}
+
+type ServiceFactory struct{}
 
 // Service exposes the methods to interact with the FSM service
 type Service struct {
@@ -23,6 +32,10 @@ type StateMachine struct {
 type StateMachineTransition struct {
 	From []string
 	To   []string
+}
+
+func NewServiceFactory() *ServiceFactory {
+	return &ServiceFactory{}
 }
 
 // NewService initializes and returns a new instance of the FSM service
@@ -142,4 +155,54 @@ func generateStates(stage string, transitions []StateMachineTransition) ([]strin
 
 func originState() string {
 	return "origin"
+}
+
+// TODO: Unit test
+func (s ServiceFactory) NewFsmService(definition config.Flowit) (service Service, err error) {
+	fsms, err := buildFSMs(definition.StateMachines, definition.Workflows)
+	if err != nil {
+		return service, errors.WithStack(err)
+	}
+	return *NewService(fsms), nil
+}
+
+func buildFSMs(stateMachines []config.StateMachine, workflows []config.Workflow) ([]StateMachine, error) {
+
+	fsmWorkflows := make([]StateMachine, len(workflows))
+	for i, workflow := range workflows {
+		fsmWorkflows[i].ID = workflow.StateMachine
+
+		var stateMachine StateMachine
+		for _, sm := range stateMachines {
+
+			if workflow.StateMachine == sm.ID {
+				stateMachine.States = sm.Stages
+				stateMachine.InitialState = sm.InitialStage
+				stateMachine.FinalStates = sm.FinalStages
+				fsmTransitions, err := buildTransitions(sm.Transitions)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+				stateMachine.Transitions = fsmTransitions
+			}
+
+		}
+
+		fsmWorkflows[i].States = stateMachine.States
+		fsmWorkflows[i].InitialState = stateMachine.InitialState
+		fsmWorkflows[i].FinalStates = stateMachine.FinalStates
+		fsmWorkflows[i].Transitions = stateMachine.Transitions
+
+	}
+	return fsmWorkflows, nil
+}
+
+func buildTransitions(configTransitions []config.StateMachineTransition) ([]StateMachineTransition, error) {
+
+	var fsmTransitions []StateMachineTransition
+	if err := utils.DeepCopy(configTransitions, &fsmTransitions); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return fsmTransitions, nil
+
 }

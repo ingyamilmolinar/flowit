@@ -70,6 +70,25 @@ type Transition struct {
 	To   []string
 }
 
+func (wd WorkflowDefinition) StateMachine(stateMachineID string) (StateMachine, error) {
+	for _, stateMachine := range wd.Flowit.StateMachines {
+		if stateMachine.ID == stateMachineID {
+			return stateMachine, nil
+		}
+	}
+	return StateMachine{}, errors.New("Invalid state machine ID: " + stateMachineID)
+}
+
+// Workflow returns the workflow associated to the specified workflowID
+func (wd WorkflowDefinition) Workflow(workflowID string) (Workflow, error) {
+	for _, workflow := range wd.Flowit.Workflows {
+		if workflow.ID == workflowID {
+			return workflow, nil
+		}
+	}
+	return Workflow{}, errors.New("Invalid workflow ID: " + workflowID)
+}
+
 // Stages returns the loaded workflow definition stages for the specified workflowID
 func (wd WorkflowDefinition) Stages(workflowID string) ([]Stage, error) {
 	for _, workflow := range wd.Flowit.Workflows {

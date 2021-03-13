@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/yamil-rivera/flowit/internal/config"
 	r "github.com/yamil-rivera/flowit/internal/repository"
 	"github.com/yamil-rivera/flowit/internal/workflow"
 )
@@ -28,8 +29,10 @@ var _ = Describe("Repository", func() {
 			execution,
 		},
 		LatestExecution: &execution,
-		Variables: map[string]interface{}{
-			"my-var": "my-val",
+		State: config.Flowit{
+			Variables: map[string]interface{}{
+				"my-var": "my-val",
+			},
 		},
 		Metadata: workflow.WorkflowMetadata{
 			Version:  0xDEDEDEDE,

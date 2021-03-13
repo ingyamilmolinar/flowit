@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/yamil-rivera/flowit/internal/config"
 )
 
 // Workflow is the data structure representing a single workflow instance
@@ -15,8 +16,10 @@ type Workflow struct {
 	IsActive        bool
 	Executions      []Execution
 	LatestExecution *Execution
-	Variables       map[string]interface{}
-	Metadata        WorkflowMetadata
+	// TODO: Switch to pointer and refer to a separate struct in the repository
+	// This to avoid several workflows based on the same config to have duplicated data in the repo
+	State    config.Flowit
+	Metadata WorkflowMetadata
 }
 
 // WorkflowMetadata is the data structure that provides workflow instance metadata
@@ -66,14 +69,14 @@ func NewService() *Service {
 }
 
 // CreateWorkflow creates a new Workflow with a name and a variable map as inputs
-func (s *Service) CreateWorkflow(workflowName string, variables map[string]interface{}) *Workflow {
+func (s *Service) CreateWorkflow(workflowName string, definition config.Flowit) *Workflow {
 	workflowID := uuid.New().String()
 	return &Workflow{
-		ID:        workflowID,
-		Preffix:   workflowID[:6],
-		Name:      workflowName,
-		IsActive:  false,
-		Variables: variables,
+		ID:       workflowID,
+		Preffix:  workflowID[:6],
+		Name:     workflowName,
+		IsActive: false,
+		State:    definition,
 		Metadata: WorkflowMetadata{
 			Version: 0,
 		},
@@ -136,7 +139,7 @@ func (s *Service) FinishExecution(workflow *Workflow, execution *Execution, work
 
 func (s *Service) AddVariables(workflow *Workflow, variables map[string]interface{}) {
 	for k, v := range variables {
-		workflow.Variables[k] = v
+		workflow.State.Variables[k] = v
 	}
 }
 
@@ -155,4 +158,27 @@ func (optional *OptionalWorkflow) Get() (Workflow, error) {
 		return optional.workflow, errors.New("optional value is not set")
 	}
 	return optional.workflow, nil
+}
+
+func (w Workflow) Stage(stageID string) config.Stage {
+	for _, wf := range w.State.Workflows {
+		if wf.ID != w.Name {
+			continue
+		}
+		for _, s := range wf.Stages {
+			if s.ID == stageID {
+				return s
+			}
+		}
+	}
+	return config.Stage{}
+}
+
+func (w Workflow) StateMachineID() string {
+	for _, wf := range w.State.Workflows {
+		if w.Name == wf.ID {
+			return wf.StateMachine
+		}
+	}
+	return ""
 }
