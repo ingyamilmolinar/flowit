@@ -48,8 +48,3 @@ type rawStage struct {
 	Conditions []*string
 	Actions    []*string
 }
-
-type rawTransition struct {
-	From *string
-	To   []*string
-}

@@ -41,11 +41,10 @@ func (s mockService) GetWorkflows(workflowName string, count int, excludeInactiv
 }
 
 func (s mockService) GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error) {
+	// nolint:prealloc
 	var workflows []w.Workflow
 	for _, ws := range s.workflows {
-		for _, wf := range ws {
-			workflows = append(workflows, wf)
-		}
+		workflows = append(workflows, ws...)
 	}
 	return workflows, nil
 }

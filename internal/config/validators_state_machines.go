@@ -262,6 +262,7 @@ func (n node) ID() int64 {
 
 func generateNodeID(state string) int64 {
 	h := fnv.New64a()
+	// nolint:errcheck
 	h.Write([]byte(state))
 	return int64(h.Sum64())
 }

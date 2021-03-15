@@ -12,10 +12,10 @@ type defaults struct {
 }
 
 func setDefaults(workflowDefinition *rawWorkflowDefinition) {
-	setDefaultValues(workflowDefinition, generateDefaultValues(workflowDefinition))
+	setDefaultValues(workflowDefinition, generateDefaultValues())
 }
 
-func generateDefaultValues(workflowDefinition *rawWorkflowDefinition) *defaults {
+func generateDefaultValues() *defaults {
 
 	var defaultValues defaults
 

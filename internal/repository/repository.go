@@ -13,7 +13,7 @@ import (
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
-// Service is the data structure from which to use the persistance methods
+// Service is the data structure from which to use the persistence methods
 type Service struct{}
 
 // NewService creates and returns a Service instance
@@ -124,7 +124,7 @@ func (rs Service) GetWorkflowFromPreffix(workflowName, workflowPreffix string) (
 				}
 				workflow = *w
 				workflowSet = true
-				break
+				break // nolint:staticcheck
 			}
 			return nil
 		}); err != nil {

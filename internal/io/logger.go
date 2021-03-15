@@ -8,7 +8,7 @@ import (
 )
 
 // Logger is the pointer to the already configured logrus logger instance
-var Logger *logrus.Logger
+var Logger *logrus.Logger // nolint: gochecknoglobals
 
 // InitLogger initializes a new instance of logrus.Logger for later consumption
 func init() {

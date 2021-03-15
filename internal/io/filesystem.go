@@ -9,7 +9,7 @@ import (
 // GetProjectRootDir gets the project's root directory
 // TODO: This assumes a two level deep directory which is very error prone
 func GetProjectRootDir() string {
-	/* #dogsled */
+	// nolint:dogsled
 	_, currentExecFilename, _, _ := runtime.Caller(0)
 	return filepath.Dir(currentExecFilename) + "/../../"
 }

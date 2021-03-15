@@ -24,17 +24,6 @@ func validIdentifier(identifier interface{}) error {
 	}
 }
 
-func validName(name interface{}) error {
-	switch name := name.(type) {
-	case *string, string:
-		return validator.Validate(name,
-			commonNamingRules()...,
-		)
-	default:
-		return errors.New("Invalid name type. Got " + reflect.TypeOf(name).Name())
-	}
-}
-
 func commonNamingRules() []validator.Rule {
 	return []validator.Rule{
 		is.PrintableASCII,

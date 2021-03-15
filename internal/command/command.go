@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/yamil-rivera/flowit/internal/config"
@@ -47,7 +45,7 @@ func NewService(run RuntimeService, fsf fsm.FsmServiceFactory, repo RepositorySe
 // and previous active workflows
 func (s *Service) RegisterCommands(version string) error {
 
-	var mainCommands []command
+	var mainCommands []command // nolint:prealloc
 	fsmService, err := s.fsmServiceFactory.NewFsmService(s.workflowDefinition.Flowit)
 	if err != nil {
 		return errors.WithStack(err)
@@ -83,7 +81,8 @@ func (s *Service) RegisterCommands(version string) error {
 		// Check if we already have a registered command for this workflow name
 		var cmd *command
 		var found bool
-		for _, mainCmd := range mainCommands {
+		for i := range mainCommands {
+			mainCmd := mainCommands[i]
 			if mainCmd.cobra.Use == workflow.Name {
 				cmd = &mainCmd
 				found = true
@@ -127,10 +126,6 @@ func (s Service) Execute() error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func (s Service) getAllActiveWorkflowsByName(workflowName string) ([]w.Workflow, error) {
-	return s.repositoryService.GetWorkflows(workflowName, 0, true)
 }
 
 func (s Service) getAllActiveWorkflows() ([]w.Workflow, error) {
@@ -311,21 +306,13 @@ func (s Service) getWorkflowIDFromName(workflowName, workflowPreffix string) (st
 }
 
 func replaceCommand(cmds []command, cmd command) []command {
-	var result []command
-	for _, c := range cmds {
+	result := make([]command, len(cmds))
+	for i, c := range cmds {
 		if c.cobra.Use == cmd.cobra.Use {
-			result = append(result, cmd)
+			result[i] = cmd
 			continue
 		}
-		result = append(result, c)
-	}
-	return result
-}
-
-func stringifyCmd(c *command) string {
-	result := c.cobra.Name() + " "
-	for i, s := range c.subcommands {
-		result += fmt.Sprint(i) + ":" + stringifyCmd(&s)
+		result[i] = c
 	}
 	return result
 }

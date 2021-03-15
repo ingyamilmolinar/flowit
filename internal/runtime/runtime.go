@@ -76,6 +76,7 @@ func (s *Service) Run(optionalWorkflowPreffix utils.OptionalString, args []strin
 	var workflow *w.Workflow
 	if !optionalWorkflowPreffix.IsSet() {
 		workflow = s.workflowService.CreateWorkflow(workflowName, workflowDefinition)
+		// nolint: errcheck
 		writer.Write("Workflow with ID: " + workflow.ID + " was created")
 	} else {
 		workflowPreffix, _ := optionalWorkflowPreffix.Get()
@@ -170,6 +171,7 @@ func (s *Service) Cancel(optionalWorkflowID utils.OptionalString, args []string,
 	if err := s.repositoryService.PutWorkflow(workflow); err != nil {
 		return errors.WithStack(err)
 	}
+	// nolint: errcheck
 	writer.Write("Workflow with ID: " + workflow.ID + " was cancelled")
 	return nil
 }
@@ -195,6 +197,7 @@ func (s Service) runCommands(commands []string, variables map[string]interface{}
 			return i, errors.Wrap(err, "Error evaluating variables in command: "+command)
 		}
 		out, err := executor.Execute(parsedCommand)
+		// nolint: errcheck
 		writer.Write(out)
 		if err != nil {
 			return i, errors.Wrap(err, "Error executing command: "+parsedCommand)
@@ -205,6 +208,7 @@ func (s Service) runCommands(commands []string, variables map[string]interface{}
 
 func (s Service) runConditions(conditions []string, variables map[string]interface{}, executor Executor, writer Writer) error {
 	if len(conditions) > 0 {
+		// nolint: errcheck
 		writer.Write("Running conditions...")
 		_, err := s.execute(conditions, variables, 0, executor, writer)
 		if err != nil {
@@ -215,6 +219,7 @@ func (s Service) runConditions(conditions []string, variables map[string]interfa
 }
 
 func (s Service) runActions(workflow *w.Workflow, execution *w.Execution, actions []string, variables map[string]interface{}, checkpointEnabled bool, checkpoint int, executor Executor, writer Writer) error {
+	// nolint: errcheck
 	writer.Write("Running actions...")
 	failedActionIdx, err := s.execute(actions, variables, checkpoint, executor, writer)
 	if err != nil {
@@ -222,6 +227,7 @@ func (s Service) runActions(workflow *w.Workflow, execution *w.Execution, action
 		// stdout = append(stdout, utils.MergeSlices(actions[checkpoint:failedActionIdx], out)...)
 		if checkpointEnabled {
 			s.workflowService.SetCheckpoint(execution, failedActionIdx)
+			// nolint: errcheck
 			writer.Write("Checkpoint set on command: " + actions[failedActionIdx])
 			if err := s.workflowService.FinishExecution(workflow, execution, w.FAILED); err != nil {
 				return errors.WithStack(err)
