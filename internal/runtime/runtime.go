@@ -11,12 +11,14 @@ import (
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
+// Service exposes the methods to interact with the Runtime Service
 type Service struct {
 	repositoryService RepositoryService
 	fsmServiceFactory fsm.FsmServiceFactory
 	workflowService   WorkflowService
 }
 
+// RepositoryService defines the methods that must be implemented in order for a struct to be considered a Repository Service by the RuntimeService
 type RepositoryService interface {
 	GetWorkflow(workflowName, workflowID string) (w.OptionalWorkflow, error)
 	GetWorkflows(workflowName string, count int, excludeInactive bool) ([]w.Workflow, error)
@@ -25,6 +27,7 @@ type RepositoryService interface {
 	PutWorkflow(workflow w.Workflow) error
 }
 
+// WorkflowService defines the methods that must be implemented in order for a struct to be considered a Workflow Service by the RuntimeService
 type WorkflowService interface {
 	CreateWorkflow(workflowName string, definition config.Flowit) *w.Workflow
 	CancelWorkflow(workflow *w.Workflow)
@@ -34,31 +37,40 @@ type WorkflowService interface {
 	AddVariables(workflow *w.Workflow, variables map[string]interface{})
 }
 
+// Writer defines the methods that must be implemented in order for a struct to be considered a Writer by the RuntimeService
+// A Writer is an object which encapsulates a write side-effect
+// It is used by the RuntimeService to avoid depending on a concrete logging implementation
 type Writer interface {
 	Write(s string) error
 }
 
+// Executor defines the methods that must be implemented in order for a struct to be considered an Executor by the RuntimeService
 type Executor interface {
 	Config(shell string)
 	Execute(command string) (string, error)
 }
 
+// UnixShellExecutor is the default implementation of the Executor interface
 type UnixShellExecutor struct {
 	shell string
 }
 
+// NewService returns a new instance of the RuntimeService
 func NewService(rs RepositoryService, fsf fsm.FsmServiceFactory, ws WorkflowService) *Service {
 	return &Service{rs, fsf, ws}
 }
 
+// NewUnixShellExecutor returns an Executor instance based on the UnixShellExecutor
 func NewUnixShellExecutor() Executor {
 	return &UnixShellExecutor{}
 }
 
+// Config configures the UnixShellExecutor using a shell binary location
 func (e *UnixShellExecutor) Config(shell string) {
 	e.shell = shell
 }
 
+// Execute receives a command, runs it using the configured shell and returns the produced output
 func (e *UnixShellExecutor) Execute(command string) (string, error) {
 	shellArgs := strings.Split(e.shell, " ")
 	mainCommand := shellArgs[0]
@@ -72,6 +84,9 @@ func (e *UnixShellExecutor) Execute(command string) (string, error) {
 	return trimmedOut, nil
 }
 
+// Run executes a workflow stage based on the provided configuration or based on a persisted workflow
+// If optionalWorkflowPreffix is not empty, the workflow state will be retrieved from the repository
+// If optionalWorkflowPreffix is empty, the provided workflow definition will be used to create a new workflow in the repository
 func (s *Service) Run(optionalWorkflowPreffix utils.OptionalString, args []string, workflowName, stageID string, workflowDefinition config.Flowit, executor Executor, writer Writer) error {
 	var workflow *w.Workflow
 	if !optionalWorkflowPreffix.IsSet() {
@@ -156,9 +171,8 @@ func (s *Service) Run(optionalWorkflowPreffix utils.OptionalString, args []strin
 	return nil
 }
 
-func (s *Service) Cancel(optionalWorkflowID utils.OptionalString, args []string, workflowName string, writer Writer) error {
-	// We are sure optionalWorkflowID is always wrapping a workflowID
-	workflowID, _ := optionalWorkflowID.Get()
+// Cancel marks the provided workflowID as cancelled
+func (s *Service) Cancel(workflowID string, workflowName string, writer Writer) error {
 	workflowOptional, err := s.repositoryService.GetWorkflow(workflowName, workflowID)
 	if err != nil {
 		return errors.WithStack(err)

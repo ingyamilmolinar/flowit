@@ -54,6 +54,7 @@ type OptionalWorkflow struct {
 	isSet    bool
 }
 
+// WorkflowState defines all the possible workflow states
 type WorkflowState int
 
 const (
@@ -62,8 +63,10 @@ const (
 	FINISHED WorkflowState = iota
 )
 
+// Service implements the Workflow Service methods
 type Service struct{}
 
+// NewService builds a new Workflow Service
 func NewService() *Service {
 	return &Service{}
 }
@@ -92,6 +95,7 @@ func (s *Service) CancelWorkflow(w *Workflow) {
 	w.Metadata.Finished = now
 }
 
+// StartExecution returns a new Execution for a given Workflow
 func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage string, args []string) *Execution {
 	now := uint64(time.Now().UnixNano())
 	execution := Execution{
@@ -115,10 +119,12 @@ func (s *Service) StartExecution(workflow *Workflow, fromStage, currentStage str
 	return &execution
 }
 
+// SetCheckpoint sets the checkpoint for a given execution
 func (s *Service) SetCheckpoint(execution *Execution, checkpoint int) {
 	execution.Checkpoint = checkpoint
 }
 
+// FinishExecution marks a given execution as finished
 func (s *Service) FinishExecution(workflow *Workflow, execution *Execution, workflowState WorkflowState) error {
 	if execution.Metadata.Finished > 0 {
 		return errors.New("Execution has already finished")
@@ -137,6 +143,7 @@ func (s *Service) FinishExecution(workflow *Workflow, execution *Execution, work
 	return nil
 }
 
+// AddVariables adds the given variables to the workflow instance
 func (s *Service) AddVariables(workflow *Workflow, variables map[string]interface{}) {
 	for k, v := range variables {
 		workflow.State.Variables[k] = v
@@ -160,6 +167,7 @@ func (optional *OptionalWorkflow) Get() (Workflow, error) {
 	return optional.workflow, nil
 }
 
+// Stage returns the flowit configuration stage given a stage ID
 func (w Workflow) Stage(stageID string) config.Stage {
 	for _, wf := range w.State.Workflows {
 		if wf.ID != w.Name {
@@ -174,6 +182,7 @@ func (w Workflow) Stage(stageID string) config.Stage {
 	return config.Stage{}
 }
 
+// StateMachineID returns the worklow state machine ID
 func (w Workflow) StateMachineID() string {
 	for _, wf := range w.State.Workflows {
 		if w.Name == wf.ID {

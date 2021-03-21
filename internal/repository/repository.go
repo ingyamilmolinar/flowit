@@ -227,6 +227,8 @@ func (rs Service) GetWorkflows(workflowName string, n int, excludeInactive bool)
 	return nil, nil
 }
 
+// GetAllWorkflows returns a list of all workflows if excludeInactive is false.
+// It returns all active workflows if excludeInactive is true.
 // TODO: Unit test
 func (rs Service) GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error) {
 	db, err := openDB()

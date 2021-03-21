@@ -7,10 +7,12 @@ import (
 	"github.com/yamil-rivera/flowit/internal/utils"
 )
 
+// FsmServiceFactory defines the methods that an FSM Service Factory should implement
 type FsmServiceFactory interface {
 	NewFsmService(config config.Flowit) (Service, error)
 }
 
+// ServiceFactory exposes the FSM Service Factory methods
 type ServiceFactory struct{}
 
 // Service exposes the methods to interact with the FSM service
@@ -34,6 +36,7 @@ type StateMachineTransition struct {
 	To   []string
 }
 
+// NewServiceFactory returns the default implementation of the FSM Service Factory
 func NewServiceFactory() *ServiceFactory {
 	return &ServiceFactory{}
 }
@@ -112,11 +115,13 @@ func (s Service) AvailableStates(stateMachineID string, currentState string) []s
 	return availableTransitions
 }
 
+// OriginState returns the very first state that ALL state machines start with`
+// This is different than the InitialState and is the same for ALL state machines
 func (s Service) OriginState() string {
 	return originState()
 }
 
-// InitialState returns the initial state of a state machine
+// InitialState returns the initial state of a state machine given a state machine ID
 func (s Service) InitialState(stateMachineID string) string {
 	stateMachine := s.stateMachines[stateMachineID]
 	return stateMachine.AvailableTransitions()[0]
@@ -134,7 +139,7 @@ func (s Service) IsActiveState(stateMachineID, state string) bool {
 	return originState != state && availableTransitions > 0
 }
 
-// IsFinalState validates whether or not a particular state is final
+// IsFinalState validates whether or not a particular state is the last state
 // for a given state machine
 func (s Service) IsFinalState(stateMachineID, state string) bool {
 	originState := s.stateMachines[stateMachineID].Current()
@@ -157,6 +162,7 @@ func originState() string {
 	return "origin"
 }
 
+// NewFsmService receives a Flowit configuration and returns a new FSM Service
 // TODO: Unit test
 func (s ServiceFactory) NewFsmService(definition config.Flowit) (service Service, err error) {
 	fsms, err := buildFSMs(definition.StateMachines, definition.Workflows)

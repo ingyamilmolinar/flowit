@@ -11,11 +11,13 @@ import (
 	w "github.com/yamil-rivera/flowit/internal/workflow"
 )
 
+// RuntimeService exposes useful methods for managing workflow executions
 type RuntimeService interface {
 	Run(optionalWorkflowID utils.OptionalString, args []string, workflowName, stageID string, workflowDefinition config.Flowit, executor runtime.Executor, writer runtime.Writer) error
-	Cancel(optionalWorkflowID utils.OptionalString, args []string, workflowName string, writer runtime.Writer) error
+	Cancel(workflowID string, workflowName string, writer runtime.Writer) error
 }
 
+// RepositoryService exposes useful methods for persisting and retrieving workflows
 type RepositoryService interface {
 	GetWorkflow(workflowName, workflowID string) (w.OptionalWorkflow, error)
 	GetWorkflows(workflowName string, count int, excludeInactive bool) ([]w.Workflow, error)
@@ -24,6 +26,7 @@ type RepositoryService interface {
 	PutWorkflow(workflow w.Workflow) error
 }
 
+// Service implements the command service interface
 type Service struct {
 	rootCommand        *cobra.Command
 	runtimeService     RuntimeService
@@ -37,6 +40,7 @@ type command struct {
 	subcommands []command
 }
 
+// NewService creates a new command service
 func NewService(run RuntimeService, fsf fsm.FsmServiceFactory, repo RepositoryService, wd *config.WorkflowDefinition) *Service {
 	return &Service{nil, run, fsf, repo, wd}
 }
@@ -121,6 +125,7 @@ func (s *Service) RegisterCommands(version string) error {
 	return nil
 }
 
+// Execute will kickstart the root command
 func (s Service) Execute() error {
 	if err := s.rootCommand.Execute(); err != nil {
 		return errors.WithStack(err)
@@ -256,7 +261,9 @@ func (s Service) generateCancelCommand(workflowName string) command {
 					if err != nil {
 						return errors.WithStack(err)
 					}
-					err = s.runtimeService.Cancel(optionalWorkflowID, args, workflowName, io.NewConsoleWriter())
+					// We are sure the optional is wrapping a workflow ID
+					workflowID, _ := optionalWorkflowID.Get()
+					err = s.runtimeService.Cancel(workflowID, workflowName, io.NewConsoleWriter())
 					return err
 				}
 

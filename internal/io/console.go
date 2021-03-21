@@ -6,12 +6,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ConsoleWriter exposes useful methods to interact with the console
 type ConsoleWriter struct{}
 
+// NewConsoleWriter returns a new ConsoleWriter instance
 func NewConsoleWriter() ConsoleWriter {
 	return ConsoleWriter{}
 }
 
+// Write receives a string and prints it to the console including a new line
 func (w ConsoleWriter) Write(s string) error {
 	return Println(s)
 }
@@ -48,16 +51,6 @@ func Printf(format string, a ...interface{}) error {
 func Printfln(format string, a ...interface{}) error {
 	if _, err := fmt.Printf(format+"\n", a...); err != nil {
 		return errors.WithStack(err)
-	}
-	return nil
-}
-
-func PrintSlice(s ...string) error {
-	for _, e := range s {
-		err := Print(e + "\n")
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }

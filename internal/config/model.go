@@ -70,6 +70,8 @@ type Transition struct {
 	To   []string
 }
 
+// StateMachine receives a state machine ID and returns the correspoding
+// state machine
 func (wd WorkflowDefinition) StateMachine(stateMachineID string) (StateMachine, error) {
 	for _, stateMachine := range wd.Flowit.StateMachines {
 		if stateMachine.ID == stateMachineID {

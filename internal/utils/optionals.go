@@ -8,7 +8,7 @@ type OptionalString struct {
 	isSet bool
 }
 
-// NewString receives a string and returns a filled optional ready to be unwrapped
+// NewStringOptional receives a string and returns a filled optional ready to be unwrapped
 func NewStringOptional(str string) OptionalString {
 	return OptionalString{
 		str:   str,
