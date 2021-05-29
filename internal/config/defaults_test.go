@@ -13,8 +13,8 @@ var _ = Describe("Config", func() {
 
 		It("should return defaults only for nil values", func() {
 			config := rawConfig{
-				CheckpointExecution: nil,
-				Shell:               nil,
+				Checkpoints: nil,
+				Shell:       nil,
 			}
 			mainDefinition := rawMainDefinition{
 				Config: &config,
@@ -23,13 +23,13 @@ var _ = Describe("Config", func() {
 				Flowit: &mainDefinition,
 			}
 			setDefaults(&workflowDefinition)
-			Expect(*workflowDefinition.Flowit.Config.CheckpointExecution).To(Equal(true))
+			Expect(*workflowDefinition.Flowit.Config.Checkpoints).To(Equal(true))
 			Expect(*workflowDefinition.Flowit.Config.Shell).To(Equal(os.Getenv("SHELL")))
 
 			shell := "bash"
 			config = rawConfig{
-				CheckpointExecution: nil,
-				Shell:               &shell,
+				Checkpoints: nil,
+				Shell:       &shell,
 			}
 			mainDefinition = rawMainDefinition{
 				Config: &config,
@@ -38,7 +38,7 @@ var _ = Describe("Config", func() {
 				Flowit: &mainDefinition,
 			}
 			setDefaults(&workflowDefinition)
-			Expect(*workflowDefinition.Flowit.Config.CheckpointExecution).To(Equal(true))
+			Expect(*workflowDefinition.Flowit.Config.Checkpoints).To(Equal(true))
 			Expect(*workflowDefinition.Flowit.Config.Shell).To(Equal(shell))
 		})
 

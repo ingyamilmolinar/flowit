@@ -2,7 +2,7 @@ flowit:
   version: "0.1"
 
   config:
-    checkpoint-execution: true
+    checkpoints: true
     shell: /usr/bin/env bash
 
   variables:

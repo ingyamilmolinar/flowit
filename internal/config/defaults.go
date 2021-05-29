@@ -39,8 +39,8 @@ func setDefaultValues(workflowDefinition *rawWorkflowDefinition, defaultValues *
 	if workflowDefinition.Flowit.Config == nil {
 		workflowDefinition.Flowit.Config = &rawConfig{}
 	}
-	if workflowDefinition.Flowit.Config.CheckpointExecution == nil {
-		workflowDefinition.Flowit.Config.CheckpointExecution = &defaultValues.CheckpointExecution
+	if workflowDefinition.Flowit.Config.Checkpoints == nil {
+		workflowDefinition.Flowit.Config.Checkpoints = &defaultValues.CheckpointExecution
 	}
 	if workflowDefinition.Flowit.Config.Shell == nil {
 		workflowDefinition.Flowit.Config.Shell = &defaultValues.Shell

@@ -15,8 +15,8 @@ type rawMainDefinition struct {
 }
 
 type rawConfig struct {
-	CheckpointExecution *bool `mapstructure:"checkpoint-execution"`
-	Shell               *string
+	Checkpoints *bool `mapstructure:"checkpoints"`
+	Shell       *string
 }
 
 type rawVariables map[string]interface{}

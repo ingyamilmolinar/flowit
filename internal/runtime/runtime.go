@@ -70,6 +70,7 @@ func (e *UnixShellExecutor) Config(shell string) {
 	e.shell = shell
 }
 
+// TODO: Handle && exit 1
 // Execute receives a command, runs it using the configured shell and returns the produced output
 func (e *UnixShellExecutor) Execute(command string) (string, error) {
 	shellArgs := strings.Split(e.shell, " ")

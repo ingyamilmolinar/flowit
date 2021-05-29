@@ -2,8 +2,8 @@ flowit:
   version: "0.1"
 
   config:
-    # The following line is invalid. Should be checkpoint-execution
-    CheckpointExecution: true
+    # The following line is invalid. Should be checkpoints
+    Checkpoints: true
     shell: /usr/bin/env bash
 
   variables:

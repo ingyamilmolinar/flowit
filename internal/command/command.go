@@ -101,15 +101,20 @@ func (s *Service) RegisterCommands(version string) error {
 		mainCommands = replaceCommand(mainCommands, *cmd)
 	}
 
+	// add version command
 	cmd := command{}
-	cmd.cobra = newSimpleCommand("version", version)
+	cmd.cobra = newPrintCommand("version", version)
 	mainCommands = append(mainCommands, cmd)
+
+	// TODO: add update command
 
 	rootCommand := &cobra.Command{
 		Use:   "flowit",
 		Short: "A flexible workflow manager",
 		Long:  "A flexible workflow manager",
 	}
+
+	// TODO: Avoid showing usage when a step fails
 
 	for _, mainCommand := range mainCommands {
 		for _, subcommands := range mainCommand.subcommands {
@@ -143,19 +148,19 @@ func newContainerCommand(commandUse string) *cobra.Command {
 	}
 }
 
-func newSimpleCommand(commandUse string, commandRun string) *cobra.Command {
+func newPrintCommand(command string, out string) *cobra.Command {
 	return &cobra.Command{
-		Use: commandUse,
+		Use: command,
 		Run: func(cmd *cobra.Command, args []string) {
-			io.Println(commandRun)
+			io.Println(out)
 		},
 	}
 }
 
 // TODO: Add arguments description to command help
-func newStageCommand(use string, args int, run func(cmd *cobra.Command, args []string) error) *cobra.Command {
+func newStageCommand(command string, args int, run func(cmd *cobra.Command, args []string) error) *cobra.Command {
 	return &cobra.Command{
-		Use:  use,
+		Use:  command,
 		Args: cobra.ExactArgs(args),
 		RunE: run,
 	}
