@@ -17,7 +17,6 @@ import (
 type Service struct{}
 
 // NewService creates and returns a Service instance
-// TODO: Make DB location configurable
 func NewService() *Service {
 	return &Service{}
 }
@@ -269,6 +268,8 @@ func (rs Service) GetAllWorkflows(excludeInactive bool) ([]w.Workflow, error) {
 	return nil, nil
 }
 
+// TODO: Make DB location configurable
+// Get location from a default or from the env
 func dbLocation() string {
 	return ".flowitDS"
 }

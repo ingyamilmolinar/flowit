@@ -13,8 +13,10 @@ import (
 	"github.com/yamil-rivera/flowit/internal/workflow"
 )
 
+// TODO: Make flowit concurrent
 func main() {
 
+	// TODO: Get this from a default or from the env
 	workflowDefinition, err := config.Load(io.GetProjectRootDir() + "/samples/test.yaml")
 	optionalExit(err)
 
@@ -45,6 +47,7 @@ func optionalExit(err error) {
 		io.Logger.Errorf("%+v", err)
 		io.Printf("%v\n", err)
 		// TODO: Do not show "exit status 1"
+		// TODO: Return exit status of failed command
 		os.Exit(1)
 	}
 }
